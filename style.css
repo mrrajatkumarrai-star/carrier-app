@@ -1,0 +1,40 @@
+body {
+  font-family: Calibri;
+  font-size: 10pt;
+  margin:0;
+  background:#eef1f5;
+}
+
+.header {
+  background:#2f3542;
+  color:white;
+  padding:10px;
+}
+
+.tabs {
+  padding:10px;
+}
+
+button {
+  padding:5px 10px;
+  margin:2px;
+  background:#57606f;
+  color:white;
+  border:none;
+  cursor:pointer;
+}
+
+input {
+  padding:4px;
+  margin:3px;
+}
+
+table {
+  width:100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  border:1px solid #ccc;
+  padding:4px;
+}
