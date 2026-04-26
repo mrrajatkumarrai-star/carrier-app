@@ -1,71 +1,124 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Carrier CRM Pro</title>
 
+<!-- Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
 <style>
+:root{
+  --bg:#eef2f6;
+  --glass:rgba(255,255,255,0.55);
+  --border:#d6dde8;
+  --text:#1f2937;
+  --accent:#4b5563;
+}
+
 body{
-  font-family:Calibri;
-  font-size:10pt;
   margin:0;
-  background:linear-gradient(135deg,#d9dde3,#eef1f5);
+  font-family:Calibri, Arial;
+  font-size:10pt;
+  background:linear-gradient(135deg,#dde3ea,#f5f7fa);
+  color:var(--text);
 }
 
 .header{
   background:#2f3542;
-  color:#fff;
-  padding:10px;
-  font-weight:bold;
+  color:white;
+  padding:10px 14px;
+  font-weight:600;
+  letter-spacing:0.3px;
 }
 
-.container{padding:10px;}
+.container{
+  padding:10px;
+}
 
-.glass{
-  background:rgba(255,255,255,0.35);
-  backdrop-filter:blur(8px);
-  border:1px solid rgba(0,0,0,0.1);
+.card{
+  background:var(--glass);
+  backdrop-filter:blur(10px);
+  border:1px solid var(--border);
+  border-radius:8px;
   padding:10px;
   margin-bottom:10px;
 }
 
 input{
   height:24px;
-  padding:4px;
-  margin:3px;
-  border:1px solid #aaa;
+  padding:4px 6px;
+  border:1px solid #bfc7d3;
+  border-radius:4px;
+  margin:2px;
+  outline:none;
 }
 
 button{
   height:26px;
-  padding:4px 8px;
-  background:#57606f;
-  color:white;
+  padding:4px 10px;
   border:none;
+  background:#4b5563;
+  color:white;
+  border-radius:4px;
   cursor:pointer;
 }
 
-.icon-btn{padding:2px 6px;margin-left:3px;font-size:9pt;}
-.copy{background:#3742fa;}
-.whatsapp{background:#25D366;}
+button:hover{
+  opacity:0.9;
+}
 
 table{
   width:100%;
   border-collapse:collapse;
+  background:white;
 }
 
 th,td{
-  border:1px solid #cfd6e0;
-  padding:4px;
+  border:1px solid var(--border);
+  padding:3px 6px;
+  white-space:nowrap;
 }
 
 th{
-  background:#e5e9f2;
+  background:#e7ecf3;
+  font-weight:600;
   cursor:pointer;
 }
 
+tbody tr:hover{
+  background:#f1f5ff;
+}
+
+.actions{
+  width:110px;
+  text-align:center;
+}
+
+.icon-btn{
+  background:none;
+  border:none;
+  cursor:pointer;
+  font-size:14px;
+  margin:0 2px;
+}
+
+.copy{color:#2563eb;}
+.wa{color:#25D366;}
+.edit{color:#374151;}
+.delete{color:#dc2626;}
+
 .status{
-  font-weight:bold;
-  color:#2f3542;
+  font-size:9pt;
+  margin-top:5px;
+  color:#374151;
+}
+
+.topbar{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
 }
 
 </style>
@@ -77,38 +130,40 @@ th{
 
 <div class="container">
 
-<div class="glass">
+<div class="card">
 
+<div class="topbar">
 <input id="carrier" placeholder="Carrier">
 <input id="location" placeholder="Location">
 <input id="pic" placeholder="PIC">
 <input id="email" placeholder="Email">
 <input id="contact" placeholder="Contact">
 <input id="remarks" placeholder="Remarks">
+</div>
 
+<div class="topbar">
 <button onclick="App.save()">Save</button>
 <button onclick="App.update()">Update</button>
 <button onclick="App.clear()">Clear</button>
-<button onclick="App.exportAllVCF()">Export All VCF</button>
+<button onclick="App.exportAllVCF()">Export VCF</button>
+</div>
 
 <div id="status" class="status"></div>
 
 </div>
 
-<div class="glass">
+<div class="card">
 
-<input placeholder="Search All" onkeyup="App.searchAll(this.value)">
-
+<div class="topbar">
+<input placeholder="Search all..." onkeyup="App.search(this.value)">
 <input placeholder="Carrier" onkeyup="App.filter(0,this.value)">
 <input placeholder="Location" onkeyup="App.filter(1,this.value)">
-<input placeholder="PIC" onkeyup="App.filter(2,this.value)">
-<input placeholder="Email" onkeyup="App.filter(3,this.value)">
 <input placeholder="Contact" onkeyup="App.filter(4,this.value)">
-<input placeholder="Remarks" onkeyup="App.filter(5,this.value)">
+</div>
 
 </div>
 
-<div class="glass">
+<div class="card">
 
 <table>
 <thead>
@@ -119,12 +174,11 @@ th{
 <th onclick="App.sort(3)">Email</th>
 <th onclick="App.sort(4)">Contact</th>
 <th onclick="App.sort(5)">Remarks</th>
-<th>Action</th>
+<th class="actions">Actions</th>
 </tr>
 </thead>
 
-<tbody id="data"></tbody>
-
+<tbody id="table"></tbody>
 </table>
 
 </div>
@@ -145,206 +199,179 @@ const firebaseConfig = {
   appId: "1:527591400910:web:07289d3360072a2b53f79f"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const db = getFirestore(initializeApp(firebaseConfig));
 
-const App={
+const App = {
 
 data:[],
 filtered:[],
 editId:null,
 
-normalize(v){return (v||"").toLowerCase().trim();},
-normalizePhone(v){return (v||"").replace(/\D/g,'');},
-
-isDuplicate(d){
-return this.data.some(r=>
-this.normalize(r.carrier)===this.normalize(d.carrier) &&
-this.normalize(r.location)===this.normalize(d.location) &&
-this.normalizePhone(r.contact)===this.normalizePhone(d.contact)
-);
-},
+norm(v){return (v||"").toLowerCase().trim();},
+phone(v){return (v||"").replace(/\D/g,'');},
 
 status(msg){
-status.innerText=msg;
-setTimeout(()=>status.innerText="",2000);
+  status.innerText = msg;
+  setTimeout(()=>status.innerText="",2000);
 },
 
 async load(){
-const snap=await getDocs(collection(db,"contacts"));
-this.data=[];
-snap.forEach(d=>this.data.push({id:d.id,...d.data()}));
-this.filtered=this.data;
-this.render();
+  const snap = await getDocs(collection(db,"contacts"));
+  this.data = snap.docs.map(d=>({id:d.id,...d.data()}));
+  this.filtered = this.data;
+  this.render();
 },
 
 render(){
-let html="";
-this.filtered.forEach(r=>{
-html+=`<tr>
-<td>${r.carrier||""}</td>
-<td>${r.location||""}</td>
-<td>${r.pic||""}</td>
+  table.innerHTML = this.filtered.map(r=>`
+  <tr>
+    <td>${r.carrier||""}</td>
+    <td>${r.location||""}</td>
+    <td>${r.pic||""}</td>
 
-<td>
-${r.email||""}
-<button class="icon-btn copy" onclick="App.copy('${r.email}')">📋</button>
-</td>
+    <td>
+      ${r.email||""}
+      <button class="icon-btn copy" onclick="App.copy('${r.email}')">
+        <i class="bi bi-copy"></i>
+      </button>
+    </td>
 
-<td>
-${r.contact||""}
-<button class="icon-btn copy" onclick="App.copy('${r.contact}')">📋</button>
-<button class="icon-btn whatsapp" onclick="App.whatsapp('${r.contact}')">WA</button>
-</td>
+    <td>
+      ${r.contact||""}
+      <button class="icon-btn copy" onclick="App.copy('${r.contact}')">
+        <i class="bi bi-copy"></i>
+      </button>
+      <button class="icon-btn wa" onclick="App.wa('${r.contact}')">
+        <i class="bi bi-whatsapp"></i>
+      </button>
+    </td>
 
-<td>${r.remarks||""}</td>
+    <td>${r.remarks||""}</td>
 
-<td>
-<button onclick="App.edit('${r.id}')">Edit</button>
-<button onclick="App.del('${r.id}')">Delete</button>
-<button onclick="App.exportSingleVCF('${r.id}')">VCF</button>
-</td>
-
-</tr>`;
-});
-data.innerHTML=html;
+    <td class="actions">
+      <button class="icon-btn edit" onclick="App.edit('${r.id}')">
+        <i class="bi bi-pencil"></i>
+      </button>
+      <button class="icon-btn delete" onclick="App.del('${r.id}')">
+        <i class="bi bi-trash"></i>
+      </button>
+    </td>
+  </tr>
+  `).join("");
 },
 
-getForm(){
-return{
-carrier:carrier.value.trim(),
-location:location.value.trim(),
-pic:pic.value.trim(),
-email:email.value.trim(),
-contact:contact.value.trim(),
-remarks:remarks.value.trim()
-};
+form(){
+  return {
+    carrier:carrier.value.trim(),
+    location:location.value.trim(),
+    pic:pic.value.trim(),
+    email:email.value.trim(),
+    contact:contact.value.trim(),
+    remarks:remarks.value.trim()
+  };
 },
 
-validate(d){
-if(!d.carrier || !d.location){
-this.status("Carrier & Location required");
-return false;
-}
-return true;
+duplicate(d){
+  return this.data.some(r =>
+    this.norm(r.carrier)===this.norm(d.carrier) &&
+    this.norm(r.location)===this.norm(d.location) &&
+    this.phone(r.contact)===this.phone(d.contact)
+  );
 },
 
 async save(){
-const d=this.getForm();
-if(!this.validate(d)) return;
-
-if(this.isDuplicate(d)){
-this.status("Duplicate record exists");
-return;
-}
-
-await addDoc(collection(db,"contacts"),d);
-this.clear();
-this.load();
-this.status("Saved");
+  const d=this.form();
+  if(!d.carrier || !d.location){
+    this.status("Carrier & Location required");
+    return;
+  }
+  if(this.duplicate(d)){
+    this.status("Duplicate exists");
+    return;
+  }
+  await addDoc(collection(db,"contacts"),d);
+  this.clear();
+  this.load();
+  this.status("Saved");
 },
 
 async update(){
-if(!this.editId){
-this.status("Select record first");
-return;
-}
-const d=this.getForm();
-await updateDoc(doc(db,"contacts",this.editId),d);
-this.clear();
-this.load();
-this.status("Updated");
+  if(!this.editId){this.status("Select record"); return;}
+  const d=this.form();
+  await updateDoc(doc(db,"contacts",this.editId),d);
+  this.clear();
+  this.load();
+  this.status("Updated");
 },
 
 edit(id){
-const r=this.data.find(x=>x.id===id);
-this.editId=id;
-carrier.value=r.carrier;
-location.value=r.location;
-pic.value=r.pic;
-email.value=r.email;
-contact.value=r.contact;
-remarks.value=r.remarks;
+  const r=this.data.find(x=>x.id===id);
+  this.editId=id;
+  Object.entries(r).forEach(([k,v])=>{
+    if(document.getElementById(k)) document.getElementById(k).value=v;
+  });
 },
 
 async del(id){
-await deleteDoc(doc(db,"contacts",id));
-this.load();
+  if(!confirm("Delete?")) return;
+  await deleteDoc(doc(db,"contacts",id));
+  this.load();
 },
 
 clear(){
-this.editId=null;
-carrier.value="";
-location.value="";
-pic.value="";
-email.value="";
-contact.value="";
-remarks.value="";
+  this.editId=null;
+  ["carrier","location","pic","email","contact","remarks"].forEach(id=>{
+    document.getElementById(id).value="";
+  });
+},
+
+search(val){
+  val=val.toLowerCase();
+  this.filtered=this.data.filter(r=>
+    Object.values(r).join(" ").toLowerCase().includes(val)
+  );
+  this.render();
 },
 
 filter(col,val){
-val=val.toLowerCase();
-this.filtered=this.data.filter(r=>{
-const arr=[r.carrier,r.location,r.pic,r.email,r.contact,r.remarks];
-return (arr[col]||"").toLowerCase().includes(val);
-});
-this.render();
-},
-
-searchAll(val){
-val=val.toLowerCase();
-this.filtered=this.data.filter(r=>
-Object.values(r).join(" ").toLowerCase().includes(val)
-);
-this.render();
+  val=val.toLowerCase();
+  const keys=["carrier","location","pic","email","contact","remarks"];
+  this.filtered=this.data.filter(r=>
+    (r[keys[col]]||"").toLowerCase().includes(val)
+  );
+  this.render();
 },
 
 sort(col){
-const keys=["carrier","location","pic","email","contact","remarks"];
-const k=keys[col];
-this.filtered.sort((a,b)=>(a[k]||"").localeCompare(b[k]||""));
-this.render();
+  const keys=["carrier","location","pic","email","contact","remarks"];
+  const k=keys[col];
+  this.filtered.sort((a,b)=>(a[k]||"").localeCompare(b[k]||""));
+  this.render();
 },
 
 copy(t){navigator.clipboard.writeText(t);},
 
-whatsapp(n){
-n=n.replace(/\D/g,'');
-window.open(`https://wa.me/${n}`);
-},
-
-exportSingleVCF(id){
-const r=this.data.find(x=>x.id===id);
-const vcf=`BEGIN:VCARD
-VERSION:3.0
-FN:${r.pic}
-ORG:${r.carrier}
-TEL:${r.contact}
-EMAIL:${r.email}
-END:VCARD`;
-this.download(vcf,"contact.vcf");
+wa(n){
+  n=n.replace(/\D/g,'');
+  window.open(`https://wa.me/${n}`);
 },
 
 exportAllVCF(){
-let vcf="";
-this.data.forEach(r=>{
-vcf+=`BEGIN:VCARD
+  let v="";
+  this.data.forEach(r=>{
+    v+=`BEGIN:VCARD
 VERSION:3.0
 FN:${r.pic}
 ORG:${r.carrier}
 TEL:${r.contact}
 EMAIL:${r.email}
 END:VCARD\n`;
-});
-this.download(vcf,"all_contacts.vcf");
-},
-
-download(data,name){
-const blob=new Blob([data],{type:'text/vcard'});
-const link=document.createElement("a");
-link.href=URL.createObjectURL(blob);
-link.download=name;
-link.click();
+  });
+  const blob=new Blob([v],{type:"text/vcard"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="contacts.vcf";
+  a.click();
 }
 
 };
