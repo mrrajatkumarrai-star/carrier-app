@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
 <title>CRM</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
@@ -43,8 +42,14 @@ body{
   margin-bottom:10px;
 }
 
-.row{display:flex; flex-wrap:wrap; gap:6px; align-items:center;}
+.row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  align-items:center;
+}
 
+/* INPUT AUTO CAPS */
 input{
   height:24px;
   padding:3px 6px;
@@ -52,8 +57,6 @@ input{
   border-radius:6px;
   outline:none;
   min-width:140px;
-
-  /* FORCE CAPS (VISUAL BACKUP) */
   text-transform: uppercase;
 }
 
@@ -69,8 +72,8 @@ button{
   cursor:pointer;
 }
 
-button.primary{background:#2563eb}
 button.secondary{background:#9ca3af;color:#111827}
+button.primary{background:#2563eb}
 
 .status{
   margin-left:10px;
@@ -99,6 +102,7 @@ th{
   position:sticky;
   top:0;
   background:#e9edf5;
+  font-weight:600;
   cursor:pointer;
 }
 
@@ -108,9 +112,13 @@ tr:hover{background:#eef3ff}
 .filters input{
   width:95%;
   font-size:9pt;
+  margin-top:3px;
 }
 
-.actions{width:120px; text-align:center;}
+.actions{
+  text-align:center;
+  width:120px;
+}
 
 .icon-btn{
   border:none;
@@ -132,66 +140,64 @@ tr:hover{background:#eef3ff}
 
 <div class="container">
 
-<!-- FORM -->
-<div class="glass">
-<div class="row">
-<input id="carrier" placeholder="CARRIER">
-<input id="location" placeholder="LOCATION">
-<input id="pic" placeholder="PIC">
-<input id="email" placeholder="EMAIL">
-<input id="contact" placeholder="CONTACT">
-<input id="remarks" placeholder="REMARKS" style="min-width:220px">
+  <!-- FORM -->
+  <div class="glass">
+    <div class="row">
+      <input id="carrier" placeholder="CARRIER">
+      <input id="location" placeholder="LOCATION">
+      <input id="pic" placeholder="PIC">
+      <input id="email" placeholder="EMAIL">
+      <input id="contact" placeholder="CONTACT">
+      <input id="remarks" placeholder="REMARKS" style="min-width:220px">
 
-<button class="primary" id="btnSave">SAVE</button>
-<button id="btnUpdate">UPDATE</button>
-<button class="secondary" id="btnClear">CLEAR</button>
-<button id="btnExportAll">EXPORT VCF</button>
+      <button class="primary" id="btnSave">SAVE</button>
+      <button id="btnUpdate">UPDATE</button>
+      <button class="secondary" id="btnClear">CLEAR</button>
+      <button id="btnExportAll">EXPORT VCF</button>
 
-<span id="status" class="status"></span>
-</div>
-</div>
+      <span id="status" class="status"></span>
+    </div>
+  </div>
 
-<!-- SEARCH -->
-<div class="glass">
-<div class="row">
-<input id="searchAll" placeholder="SEARCH">
-<input id="fCarrier" placeholder="CARRIER FILTER">
-<input id="fLocation" placeholder="LOCATION FILTER">
-<input id="fPic" placeholder="PIC FILTER">
-<input id="fEmail" placeholder="EMAIL FILTER">
-<input id="fContact" placeholder="CONTACT FILTER">
-<input id="fRemarks" placeholder="REMARKS FILTER">
-</div>
-</div>
+  <!-- SEARCH -->
+  <div class="glass">
+    <div class="row">
+      <input id="searchAll" placeholder="SEARCH ALL">
+      <input id="fCarrier" placeholder="CARRIER FILTER">
+      <input id="fLocation" placeholder="LOCATION FILTER">
+      <input id="fPic" placeholder="PIC FILTER">
+      <input id="fEmail" placeholder="EMAIL FILTER">
+      <input id="fContact" placeholder="CONTACT FILTER">
+      <input id="fRemarks" placeholder="REMARKS FILTER">
+    </div>
+  </div>
 
-<!-- TABLE -->
-<div class="glass table-wrap">
-<table>
-<thead>
-<tr>
-<th data-key="carrier">CARRIER</th>
-<th data-key="location">LOCATION</th>
-<th data-key="pic">PIC</th>
-<th data-key="email">EMAIL</th>
-<th data-key="contact">CONTACT</th>
-<th data-key="remarks">REMARKS</th>
-<th class="actions">ACTION</th>
-</tr>
-
-<tr class="filters">
-<th><input data-col="carrier"></th>
-<th><input data-col="location"></th>
-<th><input data-col="pic"></th>
-<th><input data-col="email"></th>
-<th><input data-col="contact"></th>
-<th><input data-col="remarks"></th>
-<th></th>
-</tr>
-</thead>
-
-<tbody id="tbody"></tbody>
-</table>
-</div>
+  <!-- TABLE -->
+  <div class="glass table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th data-key="carrier">CARRIER</th>
+          <th data-key="location">LOCATION</th>
+          <th data-key="pic">PIC</th>
+          <th data-key="email">EMAIL</th>
+          <th data-key="contact">CONTACT</th>
+          <th data-key="remarks">REMARKS</th>
+          <th class="actions">ACTION</th>
+        </tr>
+        <tr class="filters">
+          <th><input data-col="carrier"></th>
+          <th><input data-col="location"></th>
+          <th><input data-col="pic"></th>
+          <th><input data-col="email"></th>
+          <th><input data-col="contact"></th>
+          <th><input data-col="remarks"></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
 
 </div>
 
@@ -200,95 +206,168 @@ tr:hover{background:#eef3ff}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-const app = initializeApp({
+const firebaseConfig = {
   apiKey: "AIzaSyBy7H5e9924bwSMJmsDTLBfgeUu2ofsuKc",
   authDomain: "c-rm-85c7c.firebaseapp.com",
-  projectId: "c-rm-85c7c"
-});
+  projectId: "c-rm-85c7c",
+  storageBucket: "c-rm-85c7c.appspot.com",
+  messagingSenderId: "527591400910",
+  appId: "1:527591400910:web:07289d3360072a2b53f79f"
+};
 
+const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const state = { data:[], view:[], editId:null };
+const state = {
+  data: [],
+  view: [],
+  editId: null
+};
 
-/* AUTO CAPS (REAL LOGIC) */
+const $ = id => document.getElementById(id);
+
+/* FORCE CAPS (JS LAYER) */
+function forceUppercase(el){
+  el.value = el.value.toUpperCase();
+}
+
 document.querySelectorAll("input").forEach(inp=>{
-  inp.addEventListener("input", ()=>{
-    inp.value = inp.value.toUpperCase();
-  });
+  inp.addEventListener("input", ()=> forceUppercase(inp));
 });
+
+/* HELPERS */
+function setStatus(msg){
+  $("status").textContent = msg;
+  setTimeout(()=> $("status").textContent = "", 1800);
+}
 
 function getForm(){
   return {
-    carrier: carrier.value,
-    location: location.value,
-    pic: pic.value,
-    email: email.value,
-    contact: contact.value,
-    remarks: remarks.value
+    carrier: $("carrier").value.trim(),
+    location: $("location").value.trim(),
+    pic: $("pic").value.trim(),
+    email: $("email").value.trim(),
+    contact: $("contact").value.trim(),
+    remarks: $("remarks").value.trim()
   };
 }
 
 function clearForm(){
-  document.querySelectorAll("input").forEach(i=>i.value="");
-  state.editId=null;
+  ["carrier","location","pic","email","contact","remarks"].forEach(id => $(id).value="");
+  state.editId = null;
 }
 
+function validate(d){
+  if(!d.carrier || !d.location){
+    setStatus("CARRIER & LOCATION REQUIRED");
+    return false;
+  }
+  return true;
+}
+
+/* DATA */
 async function load(){
-  const snap = await getDocs(collection(db,"contacts"));
-  state.data=[];
-  snap.forEach(d=> state.data.push({id:d.id,...d.data()}));
-  state.view=[...state.data];
+  const snap = await getDocs(collection(db, "contacts"));
+  state.data = [];
+  snap.forEach(d => state.data.push({id:d.id, ...d.data()}));
+  state.view = [...state.data];
   render();
 }
 
+/* RENDER */
 function render(){
-  tbody.innerHTML = state.view.map(r=>`
-<tr>
-<td>${r.carrier||""}</td>
-<td>${r.location||""}</td>
-<td>${r.pic||""}</td>
-<td>${r.email||""}</td>
-<td>${r.contact||""}</td>
-<td>${r.remarks||""}</td>
-<td class="actions">
-<button data-edit="${r.id}">✏️</button>
-<button data-del="${r.id}">🗑️</button>
-</td>
-</tr>`).join("");
+  const tbody = $("tbody");
+  let html = "";
+
+  state.view.forEach(r=>{
+    html += `
+      <tr>
+        <td>${r.carrier||""}</td>
+        <td>${r.location||""}</td>
+        <td>${r.pic||""}</td>
+        <td>${r.email||""}</td>
+        <td>${r.contact||""}</td>
+        <td>${r.remarks||""}</td>
+        <td class="actions">
+          <button data-edit="${r.id}">✏</button>
+          <button data-del="${r.id}">🗑</button>
+        </td>
+      </tr>`;
+  });
+
+  tbody.innerHTML = html;
 }
 
-document.body.addEventListener("click", async e=>{
-  const t = e.target;
+/* EVENTS */
+document.body.addEventListener("click", async (e)=>{
+  const t = e.target.closest("button");
+  if(!t) return;
 
   if(t.dataset.edit){
     const r = state.data.find(x=>x.id===t.dataset.edit);
-    Object.keys(r).forEach(k=>{
-      if(document.getElementById(k)) document.getElementById(k).value=r[k];
-    });
-    state.editId=r.id;
+    if(!r) return;
+
+    state.editId = r.id;
+    $("carrier").value = r.carrier||"";
+    $("location").value = r.location||"";
+    $("pic").value = r.pic||"";
+    $("email").value = r.email||"";
+    $("contact").value = r.contact||"";
+    $("remarks").value = r.remarks||"";
+
+    setStatus("EDITING");
   }
 
   if(t.dataset.del){
-    await deleteDoc(doc(db,"contacts",t.dataset.del));
-    load();
+    await deleteDoc(doc(db, "contacts", t.dataset.del));
+    setStatus("DELETED");
+    await load();
   }
 });
 
-btnSave.onclick = async ()=>{
-  await addDoc(collection(db,"contacts"), getForm());
+/* SAVE */
+$("btnSave").addEventListener("click", async ()=>{
+  const d = getForm();
+  if(!validate(d)) return;
+
+  await addDoc(collection(db,"contacts"), d);
   clearForm();
-  load();
-};
+  setStatus("SAVED");
+  await load();
+});
 
-btnUpdate.onclick = async ()=>{
-  if(!state.editId) return;
-  await updateDoc(doc(db,"contacts",state.editId), getForm());
+/* UPDATE */
+$("btnUpdate").addEventListener("click", async ()=>{
+  if(!state.editId){
+    setStatus("SELECT RECORD FIRST");
+    return;
+  }
+
+  const d = getForm();
+  if(!validate(d)) return;
+
+  await updateDoc(doc(db,"contacts", state.editId), d);
   clearForm();
-  load();
-};
+  setStatus("UPDATED");
+  await load();
+});
 
-btnClear.onclick = clearForm;
+/* CLEAR */
+$("btnClear").addEventListener("click", ()=>{
+  clearForm();
+  setStatus("CLEARED");
+});
 
+/* SEARCH */
+$("searchAll").addEventListener("input", (e)=>{
+  const v = e.target.value.toLowerCase();
+  state.view = state.data.filter(r =>
+    Object.values(r).join(" ").toLowerCase().includes(v)
+  );
+  render();
+});
+
+/* INIT */
 load();
 
 </script>
