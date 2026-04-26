@@ -148,6 +148,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const $ = (id) => document.getElementById(id);
 
 const App = {
 
@@ -168,8 +169,8 @@ this.normalize(r.hc40)===this.normalize(d.hc40)
 },
 
 status(msg){
-status.innerText=msg;
-setTimeout(()=>status.innerText="",2000);
+$("status").innerText=msg;
+setTimeout(()=>$("status").innerText="",2000);
 },
 
 async load(){
@@ -206,23 +207,23 @@ html+=`<tr>
 
 </tr>`;
 });
-data.innerHTML=html;
+$("data").innerHTML=html;
 },
 
 getForm(){
 return{
-carrier:carrier.value,
-por:por.value,
-pol:pol.value,
-pod:pod.value,
-fpod:fpod.value,
-dv20:dv20.value,
-hc40:hc40.value,
-validity:validity.value,
-ft:ft.value,
-tt:tt.value,
-via:via.value,
-remarks:remarks.value
+carrier:$("carrier").value,
+por:$("por").value,
+pol:$("pol").value,
+pod:$("pod").value,
+fpod:$("fpod").value,
+dv20:$("dv20").value,
+hc40:$("hc40").value,
+validity:$("validity").value,
+ft:$("ft").value,
+tt:$("tt").value,
+via:$("via").value,
+remarks:$("remarks").value
 };
 },
 
@@ -273,18 +274,18 @@ edit(id){
 const r=this.data.find(x=>x.id===id);
 this.editId=id;
 
-carrier.value=r.carrier||"";
-por.value=r.por||"";
-pol.value=r.pol||"";
-pod.value=r.pod||"";
-fpod.value=r.fpod||"";
-dv20.value=r.dv20||"";
-hc40.value=r.hc40||"";
-validity.value=r.validity||"";
-ft.value=r.ft||"";
-tt.value=r.tt||"";
-via.value=r.via||"";
-remarks.value=r.remarks||"";
+$("carrier").value=r.carrier||"";
+$("por").value=r.por||"";
+$("pol").value=r.pol||"";
+$("pod").value=r.pod||"";
+$("fpod").value=r.fpod||"";
+$("dv20").value=r.dv20||"";
+$("hc40").value=r.hc40||"";
+$("validity").value=r.validity||"";
+$("ft").value=r.ft||"";
+$("tt").value=r.tt||"";
+$("via").value=r.via||"";
+$("remarks").value=r.remarks||"";
 },
 
 async del(id){
