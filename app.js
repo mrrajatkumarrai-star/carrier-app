@@ -1,6 +1,8 @@
 async function loadPage(page){
+
   const res = await fetch(page);
   const html = await res.text();
+
   document.getElementById("app").innerHTML = html;
 
   if(page === "contacts.html" && window.initContacts){
@@ -11,6 +13,3 @@ async function loadPage(page){
     window.initRates();
   }
 }
-
-// default load
-loadPage("contacts.html");
