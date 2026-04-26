@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Carrier App</title>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+
+  <style>
+    body {
+      font-family: Calibri;
+      font-size: 10pt;
+      background: linear-gradient(135deg,#e6eef8,#ffffff);
+      padding:20px;
+    }
+
+    .glass {
+      background: rgba(255,255,255,0.3);
+      backdrop-filter: blur(10px);
+      padding:15px;
+      border-radius:10px;
+      margin-bottom:15px;
+    }
+
+    input {
+      margin:5px;
+      padding:5px;
+    }
+
+    button {
+      padding:5px 10px;
+      background:#007bff;
+      color:white;
+      border:none;
+      cursor:pointer;
+    }
+
+    table {
+      width:100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border:1px solid #ccc;
+      padding:5px;
+    }
+
+    th {
+      background:#007bff;
+      color:white;
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="login" class="glass">
+  <h3>Enter PIN</h3>
+  <input type="password" id="pin">
+  <button onclick="login()">Login</button>
+</div>
+
+<div id="app" style="display:none;">
+
+<div class="glass">
+<input id="carrier" placeholder="Carrier">
+<input id="location" placeholder="Location"><br>
+<input id="pic" placeholder="PIC">
+<input id="email" placeholder="Email"><br>
+<input id="contact" placeholder="Contact">
+<input id="remarks" placeholder="Remarks"><br>
+
+<button onclick="add()">Save</button>
+</div>
+
+<div class="glass">
+<div id="data"></div>
+</div>
+
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_DOMAIN",
+  projectId: "YOUR_PROJECT_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+function login(){
+  if(pin.value === "1234"){
+    login.style.display="none";
+    app.style.display="block";
+    load();
+  } else {
+    alert("Wrong PIN");
+  }
+}
+
+async function add(){
+  await db.collection("contacts").add({
+    carrier: carrier.value,
+    location: location.value,
+    pic: pic.value,
+    email: email.value,
+    contact: contact.value,
+    remarks: remarks.value
+  });
+  load();
+}
+
+async function load(){
+  const snap = await db.collection("contacts").get();
+  let html = "<table><tr><th>Carrier</th><th>Location</th><th>PIC</th><th>Email</th><th>Contact</th><th>Remarks</th><th>Action</th></tr>";
+
+  snap.forEach(doc=>{
+    const d = doc.data();
+    html += `<tr>
+      <td>${d.carrier}</td>
+      <td>${d.location}</td>
+      <td>${d.pic}</td>
+      <td>${d.email}</td>
+      <td>${d.contact}</td>
+      <td>${d.remarks}</td>
+      <td><button onclick="del('${doc.id}')">Delete</button></td>
+    </tr>`;
+  });
+
+  html += "</table>";
+  data.innerHTML = html;
+}
+
+async function del(id){
+  await db.collection("contacts").doc(id).delete();
+  load();
+}
+</script>
+
+</body>
+</html>
