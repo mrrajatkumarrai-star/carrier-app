@@ -1,77 +1,74 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Carrier CRM Pro</title>
+<title>Carrier CRM Pro</title>
 
-  <style>
-  /* ================= GLOBAL ================= */
-  body {
-    font-family: Calibri;
-    font-size: 10pt;
-    margin:0;
-    background: linear-gradient(135deg,#d5d9df,#eef1f5);
-  }
+<style>
+body{
+  font-family:Calibri;
+  font-size:10pt;
+  margin:0;
+  background:linear-gradient(135deg,#d9dde3,#eef1f5);
+}
 
-  .header {
-    background:#2f3542;
-    color:#fff;
-    padding:10px;
-    font-weight:bold;
-  }
+.header{
+  background:#2f3542;
+  color:#fff;
+  padding:10px;
+  font-weight:bold;
+}
 
-  .container {
-    padding:10px;
-  }
+.container{padding:10px;}
 
-  .glass {
-    background: rgba(255,255,255,0.4);
-    backdrop-filter: blur(8px);
-    border:1px solid rgba(0,0,0,0.1);
-    padding:10px;
-    margin-bottom:10px;
-  }
+.glass{
+  background:rgba(255,255,255,0.35);
+  backdrop-filter:blur(8px);
+  border:1px solid rgba(0,0,0,0.1);
+  padding:10px;
+  margin-bottom:10px;
+}
 
-  input {
-    height:22px;
-    padding:3px;
-    border:1px solid #aaa;
-    margin:2px;
-  }
+input{
+  height:24px;
+  padding:4px;
+  margin:3px;
+  border:1px solid #aaa;
+}
 
-  button {
-    height:26px;
-    padding:4px 10px;
-    background:#57606f;
-    color:white;
-    border:none;
-    cursor:pointer;
-  }
+button{
+  height:26px;
+  padding:4px 8px;
+  background:#57606f;
+  color:white;
+  border:none;
+  cursor:pointer;
+}
 
-  table {
-    width:100%;
-    border-collapse: collapse;
-    font-size:10pt;
-  }
+.icon-btn{padding:2px 6px;margin-left:3px;font-size:9pt;}
+.copy{background:#3742fa;}
+.whatsapp{background:#25D366;}
 
-  th, td {
-    border:1px solid #cfd6e0;
-    padding:4px;
-  }
+table{
+  width:100%;
+  border-collapse:collapse;
+}
 
-  th {
-    background:#e5e9f2;
-    cursor:pointer;
-  }
+th,td{
+  border:1px solid #cfd6e0;
+  padding:4px;
+}
 
-  tr:hover {
-    background:#f1f5ff;
-  }
+th{
+  background:#e5e9f2;
+  cursor:pointer;
+}
 
-  .status {
-    color:#2f3542;
-    font-weight:bold;
-  }
-  </style>
+.status{
+  font-weight:bold;
+  color:#2f3542;
+}
+
+</style>
 </head>
 
 <body>
@@ -80,14 +77,8 @@
 
 <div class="container">
 
-<div id="loginBox" class="glass">
-  <input type="password" id="pin" placeholder="Enter PIN">
-  <button onclick="App.login()">Login</button>
-</div>
-
-<div id="appBox" style="display:none">
-
 <div class="glass">
+
 <input id="carrier" placeholder="Carrier">
 <input id="location" placeholder="Location">
 <input id="pic" placeholder="PIC">
@@ -100,12 +91,13 @@
 <button onclick="App.clear()">Clear</button>
 <button onclick="App.exportAllVCF()">Export All VCF</button>
 
-<div class="status" id="status"></div>
+<div id="status" class="status"></div>
+
 </div>
 
 <div class="glass">
 
-<input placeholder="Search All" onkeyup="App.globalSearch(this.value)">
+<input placeholder="Search All" onkeyup="App.searchAll(this.value)">
 
 <input placeholder="Carrier" onkeyup="App.filter(0,this.value)">
 <input placeholder="Location" onkeyup="App.filter(1,this.value)">
@@ -139,8 +131,6 @@
 
 </div>
 
-</div>
-
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
@@ -158,180 +148,209 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const App = {
+const App={
 
-data: [],
-filtered: [],
-editId: null,
+data:[],
+filtered:[],
+editId:null,
 
-login() {
-  if(pin.value==="1234"){
-    loginBox.style.display="none";
-    appBox.style.display="block";
-    this.load();
-  } else alert("Wrong PIN");
+normalize(v){return (v||"").toLowerCase().trim();},
+normalizePhone(v){return (v||"").replace(/\D/g,'');},
+
+isDuplicate(d){
+return this.data.some(r=>
+this.normalize(r.carrier)===this.normalize(d.carrier) &&
+this.normalize(r.location)===this.normalize(d.location) &&
+this.normalizePhone(r.contact)===this.normalizePhone(d.contact)
+);
 },
 
-async load() {
-  const snap = await getDocs(collection(db,"contacts"));
-  this.data = [];
-  snap.forEach(d=> this.data.push({id:d.id,...d.data()}));
-  this.filtered = this.data;
-  this.render();
+status(msg){
+status.innerText=msg;
+setTimeout(()=>status.innerText="",2000);
+},
+
+async load(){
+const snap=await getDocs(collection(db,"contacts"));
+this.data=[];
+snap.forEach(d=>this.data.push({id:d.id,...d.data()}));
+this.filtered=this.data;
+this.render();
 },
 
 render(){
-  let html="";
-  this.filtered.forEach(r=>{
-    html+=`<tr>
-      <td>${r.carrier||""}</td>
-      <td>${r.location||""}</td>
-      <td>${r.pic||""}</td>
-      <td>${r.email||""}</td>
-      <td>${r.contact||""}</td>
-      <td>${r.remarks||""}</td>
-      <td>
-        <button onclick="App.edit('${r.id}')">Edit</button>
-        <button onclick="App.del('${r.id}')">Delete</button>
-        <button onclick="App.exportSingleVCF('${r.id}')">VCF</button>
-      </td>
-    </tr>`;
-  });
-  data.innerHTML=html;
+let html="";
+this.filtered.forEach(r=>{
+html+=`<tr>
+<td>${r.carrier||""}</td>
+<td>${r.location||""}</td>
+<td>${r.pic||""}</td>
+
+<td>
+${r.email||""}
+<button class="icon-btn copy" onclick="App.copy('${r.email}')">📋</button>
+</td>
+
+<td>
+${r.contact||""}
+<button class="icon-btn copy" onclick="App.copy('${r.contact}')">📋</button>
+<button class="icon-btn whatsapp" onclick="App.whatsapp('${r.contact}')">WA</button>
+</td>
+
+<td>${r.remarks||""}</td>
+
+<td>
+<button onclick="App.edit('${r.id}')">Edit</button>
+<button onclick="App.del('${r.id}')">Delete</button>
+<button onclick="App.exportSingleVCF('${r.id}')">VCF</button>
+</td>
+
+</tr>`;
+});
+data.innerHTML=html;
 },
 
 getForm(){
-  return {
-    carrier:carrier.value,
-    location:location.value,
-    pic:pic.value,
-    email:email.value,
-    contact:contact.value,
-    remarks:remarks.value
-  };
+return{
+carrier:carrier.value.trim(),
+location:location.value.trim(),
+pic:pic.value.trim(),
+email:email.value.trim(),
+contact:contact.value.trim(),
+remarks:remarks.value.trim()
+};
 },
 
 validate(d){
-  if(!d.carrier || !d.location){
-    alert("Carrier & Location required");
-    return false;
-  }
-  return true;
+if(!d.carrier || !d.location){
+this.status("Carrier & Location required");
+return false;
+}
+return true;
 },
 
 async save(){
-  const d=this.getForm();
-  if(!this.validate(d)) return;
-  await addDoc(collection(db,"contacts"),d);
-  this.clear();
-  this.load();
-  this.status("Saved");
+const d=this.getForm();
+if(!this.validate(d)) return;
+
+if(this.isDuplicate(d)){
+this.status("Duplicate record exists");
+return;
+}
+
+await addDoc(collection(db,"contacts"),d);
+this.clear();
+this.load();
+this.status("Saved");
 },
 
 async update(){
-  if(!this.editId) return alert("Select record");
-  const d=this.getForm();
-  await updateDoc(doc(db,"contacts",this.editId),d);
-  this.clear();
-  this.load();
-  this.status("Updated");
+if(!this.editId){
+this.status("Select record first");
+return;
+}
+const d=this.getForm();
+await updateDoc(doc(db,"contacts",this.editId),d);
+this.clear();
+this.load();
+this.status("Updated");
 },
 
 edit(id){
-  const r=this.data.find(x=>x.id===id);
-  this.editId=id;
-  carrier.value=r.carrier;
-  location.value=r.location;
-  pic.value=r.pic;
-  email.value=r.email;
-  contact.value=r.contact;
-  remarks.value=r.remarks;
+const r=this.data.find(x=>x.id===id);
+this.editId=id;
+carrier.value=r.carrier;
+location.value=r.location;
+pic.value=r.pic;
+email.value=r.email;
+contact.value=r.contact;
+remarks.value=r.remarks;
 },
 
 async del(id){
-  if(!confirm("Delete?")) return;
-  await deleteDoc(doc(db,"contacts",id));
-  this.load();
+await deleteDoc(doc(db,"contacts",id));
+this.load();
 },
 
 clear(){
-  this.editId=null;
-  carrier.value="";
-  location.value="";
-  pic.value="";
-  email.value="";
-  contact.value="";
-  remarks.value="";
+this.editId=null;
+carrier.value="";
+location.value="";
+pic.value="";
+email.value="";
+contact.value="";
+remarks.value="";
 },
 
 filter(col,val){
-  val=val.toLowerCase();
-  this.filtered=this.data.filter(r=>{
-    const arr=[r.carrier,r.location,r.pic,r.email,r.contact,r.remarks];
-    return (arr[col]||"").toLowerCase().includes(val);
-  });
-  this.render();
+val=val.toLowerCase();
+this.filtered=this.data.filter(r=>{
+const arr=[r.carrier,r.location,r.pic,r.email,r.contact,r.remarks];
+return (arr[col]||"").toLowerCase().includes(val);
+});
+this.render();
 },
 
-globalSearch(val){
-  val=val.toLowerCase();
-  this.filtered=this.data.filter(r=>{
-    return Object.values(r).join(" ").toLowerCase().includes(val);
-  });
-  this.render();
+searchAll(val){
+val=val.toLowerCase();
+this.filtered=this.data.filter(r=>
+Object.values(r).join(" ").toLowerCase().includes(val)
+);
+this.render();
 },
 
 sort(col){
-  const keys=["carrier","location","pic","email","contact","remarks"];
-  const k=keys[col];
-  this.filtered.sort((a,b)=>(a[k]||"").localeCompare(b[k]||""));
-  this.render();
+const keys=["carrier","location","pic","email","contact","remarks"];
+const k=keys[col];
+this.filtered.sort((a,b)=>(a[k]||"").localeCompare(b[k]||""));
+this.render();
+},
+
+copy(t){navigator.clipboard.writeText(t);},
+
+whatsapp(n){
+n=n.replace(/\D/g,'');
+window.open(`https://wa.me/${n}`);
 },
 
 exportSingleVCF(id){
-  const r=this.data.find(x=>x.id===id);
-  const vcf=`BEGIN:VCARD
+const r=this.data.find(x=>x.id===id);
+const vcf=`BEGIN:VCARD
 VERSION:3.0
 FN:${r.pic}
 ORG:${r.carrier}
 TEL:${r.contact}
 EMAIL:${r.email}
 END:VCARD`;
-
-  const blob=new Blob([vcf],{type:'text/vcard'});
-  const link=document.createElement("a");
-  link.href=URL.createObjectURL(blob);
-  link.download="contact.vcf";
-  link.click();
+this.download(vcf,"contact.vcf");
 },
 
 exportAllVCF(){
-  let vcf="";
-  this.data.forEach(r=>{
-    vcf+=`BEGIN:VCARD
+let vcf="";
+this.data.forEach(r=>{
+vcf+=`BEGIN:VCARD
 VERSION:3.0
 FN:${r.pic}
 ORG:${r.carrier}
 TEL:${r.contact}
 EMAIL:${r.email}
 END:VCARD\n`;
-  });
-
-  const blob=new Blob([vcf],{type:'text/vcard'});
-  const link=document.createElement("a");
-  link.href=URL.createObjectURL(blob);
-  link.download="all_contacts.vcf";
-  link.click();
+});
+this.download(vcf,"all_contacts.vcf");
 },
 
-status(msg){
-  status.innerText=msg;
-  setTimeout(()=>status.innerText="",2000);
+download(data,name){
+const blob=new Blob([data],{type:'text/vcard'});
+const link=document.createElement("a");
+link.href=URL.createObjectURL(blob);
+link.download=name;
+link.click();
 }
 
 };
 
 window.App=App;
+App.load();
 
 </script>
 
