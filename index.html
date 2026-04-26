@@ -1,94 +1,93 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Carrier CRM System</title>
+  <title>Carrier CRM Pro</title>
 
   <style>
-    body {
-      font-family: Calibri;
-      font-size: 10pt;
-      background:#f3f6fb;
-      margin:0;
-      padding:0;
-    }
+  /* ================= GLOBAL ================= */
+  body {
+    font-family: Calibri;
+    font-size: 10pt;
+    margin:0;
+    background: linear-gradient(135deg,#d5d9df,#eef1f5);
+  }
 
-    .header {
-      background:#217346;
-      color:white;
-      padding:12px;
-      font-weight:bold;
-    }
+  .header {
+    background:#2f3542;
+    color:#fff;
+    padding:10px;
+    font-weight:bold;
+  }
 
-    .container {
-      padding:15px;
-    }
+  .container {
+    padding:10px;
+  }
 
-    .panel {
-      background:white;
-      border:1px solid #ccc;
-      padding:10px;
-      margin-bottom:10px;
-    }
+  .glass {
+    background: rgba(255,255,255,0.4);
+    backdrop-filter: blur(8px);
+    border:1px solid rgba(0,0,0,0.1);
+    padding:10px;
+    margin-bottom:10px;
+  }
 
-    input {
-      padding:5px;
-      margin:3px;
-      border:1px solid #ccc;
-      width:150px;
-    }
+  input {
+    height:22px;
+    padding:3px;
+    border:1px solid #aaa;
+    margin:2px;
+  }
 
-    button {
-      padding:6px 12px;
-      background:#217346;
-      color:white;
-      border:none;
-      cursor:pointer;
-    }
+  button {
+    height:26px;
+    padding:4px 10px;
+    background:#57606f;
+    color:white;
+    border:none;
+    cursor:pointer;
+  }
 
-    table {
-      width:100%;
-      border-collapse: collapse;
-      margin-top:10px;
-    }
+  table {
+    width:100%;
+    border-collapse: collapse;
+    font-size:10pt;
+  }
 
-    th, td {
-      border:1px solid #d0d7e5;
-      padding:6px;
-    }
+  th, td {
+    border:1px solid #cfd6e0;
+    padding:4px;
+  }
 
-    th {
-      background:#e9edf5;
-      cursor:pointer;
-    }
+  th {
+    background:#e5e9f2;
+    cursor:pointer;
+  }
 
-    tr:hover {
-      background:#f1f7ff;
-    }
+  tr:hover {
+    background:#f1f5ff;
+  }
 
-    .status {
-      color:#217346;
-      font-weight:bold;
-    }
+  .status {
+    color:#2f3542;
+    font-weight:bold;
+  }
   </style>
 </head>
 
 <body>
 
-<div class="header">Carrier CRM System</div>
+<div class="header">Carrier CRM Pro</div>
 
 <div class="container">
 
-<div id="loginPanel" class="panel">
-  <h3>Login</h3>
-  <input type="password" id="pin">
+<div id="loginBox" class="glass">
+  <input type="password" id="pin" placeholder="Enter PIN">
   <button onclick="App.login()">Login</button>
 </div>
 
-<div id="appPanel" style="display:none;">
+<div id="appBox" style="display:none">
 
-<div class="panel">
-<h3>Contact Entry</h3>
-
+<div class="glass">
 <input id="carrier" placeholder="Carrier">
 <input id="location" placeholder="Location">
 <input id="pic" placeholder="PIC">
@@ -99,21 +98,25 @@
 <button onclick="App.save()">Save</button>
 <button onclick="App.update()">Update</button>
 <button onclick="App.clear()">Clear</button>
+<button onclick="App.exportAllVCF()">Export All VCF</button>
 
 <div class="status" id="status"></div>
 </div>
 
-<div class="panel">
+<div class="glass">
 
-<h3>Search</h3>
+<input placeholder="Search All" onkeyup="App.globalSearch(this.value)">
+
 <input placeholder="Carrier" onkeyup="App.filter(0,this.value)">
 <input placeholder="Location" onkeyup="App.filter(1,this.value)">
 <input placeholder="PIC" onkeyup="App.filter(2,this.value)">
 <input placeholder="Email" onkeyup="App.filter(3,this.value)">
+<input placeholder="Contact" onkeyup="App.filter(4,this.value)">
+<input placeholder="Remarks" onkeyup="App.filter(5,this.value)">
 
 </div>
 
-<div class="panel">
+<div class="glass">
 
 <table>
 <thead>
@@ -128,7 +131,7 @@
 </tr>
 </thead>
 
-<tbody id="tableData"></tbody>
+<tbody id="data"></tbody>
 
 </table>
 
@@ -157,141 +160,178 @@ const db = getFirestore(app);
 
 const App = {
 
-  data: [],
-  filtered: [],
-  editId: null,
+data: [],
+filtered: [],
+editId: null,
 
-  login() {
-    if(pin.value === "1234"){
-      loginPanel.style.display="none";
-      appPanel.style.display="block";
-      this.load();
-    } else {
-      alert("Wrong PIN");
-    }
-  },
-
-  async load() {
-    const snap = await getDocs(collection(db, "contacts"));
-    this.data = [];
-    snap.forEach(d=>{
-      this.data.push({id:d.id, ...d.data()});
-    });
-    this.filtered = this.data;
-    this.render();
-  },
-
-  render() {
-    let html = "";
-    this.filtered.forEach(row=>{
-      html += `<tr>
-        <td>${row.carrier||""}</td>
-        <td>${row.location||""}</td>
-        <td>${row.pic||""}</td>
-        <td>${row.email||""}</td>
-        <td>${row.contact||""}</td>
-        <td>${row.remarks||""}</td>
-        <td>
-          <button onclick="App.edit('${row.id}')">Edit</button>
-          <button onclick="App.del('${row.id}')">Delete</button>
-        </td>
-      </tr>`;
-    });
-    tableData.innerHTML = html;
-  },
-
-  getForm() {
-    return {
-      carrier: carrier.value,
-      location: location.value,
-      pic: pic.value,
-      email: email.value,
-      contact: contact.value,
-      remarks: remarks.value
-    };
-  },
-
-  validate(d){
-    if(!d.carrier || !d.location){
-      alert("Carrier & Location required");
-      return false;
-    }
-    return true;
-  },
-
-  async save(){
-    const d = this.getForm();
-    if(!this.validate(d)) return;
-
-    await addDoc(collection(db,"contacts"), d);
-    this.status("Saved");
-    this.clear();
+login() {
+  if(pin.value==="1234"){
+    loginBox.style.display="none";
+    appBox.style.display="block";
     this.load();
-  },
+  } else alert("Wrong PIN");
+},
 
-  async update(){
-    if(!this.editId) return alert("Select record");
+async load() {
+  const snap = await getDocs(collection(db,"contacts"));
+  this.data = [];
+  snap.forEach(d=> this.data.push({id:d.id,...d.data()}));
+  this.filtered = this.data;
+  this.render();
+},
 
-    const d = this.getForm();
-    await updateDoc(doc(db,"contacts",this.editId), d);
+render(){
+  let html="";
+  this.filtered.forEach(r=>{
+    html+=`<tr>
+      <td>${r.carrier||""}</td>
+      <td>${r.location||""}</td>
+      <td>${r.pic||""}</td>
+      <td>${r.email||""}</td>
+      <td>${r.contact||""}</td>
+      <td>${r.remarks||""}</td>
+      <td>
+        <button onclick="App.edit('${r.id}')">Edit</button>
+        <button onclick="App.del('${r.id}')">Delete</button>
+        <button onclick="App.exportSingleVCF('${r.id}')">VCF</button>
+      </td>
+    </tr>`;
+  });
+  data.innerHTML=html;
+},
 
-    this.status("Updated");
-    this.clear();
-    this.load();
-  },
+getForm(){
+  return {
+    carrier:carrier.value,
+    location:location.value,
+    pic:pic.value,
+    email:email.value,
+    contact:contact.value,
+    remarks:remarks.value
+  };
+},
 
-  edit(id){
-    const r = this.data.find(x=>x.id===id);
-    this.editId = id;
-
-    carrier.value = r.carrier;
-    location.value = r.location;
-    pic.value = r.pic;
-    email.value = r.email;
-    contact.value = r.contact;
-    remarks.value = r.remarks;
-  },
-
-  async del(id){
-    if(!confirm("Delete?")) return;
-    await deleteDoc(doc(db,"contacts",id));
-    this.load();
-  },
-
-  clear(){
-    this.editId=null;
-    carrier.value="";
-    location.value="";
-    pic.value="";
-    email.value="";
-    contact.value="";
-    remarks.value="";
-  },
-
-  filter(col,val){
-    val = val.toLowerCase();
-    this.filtered = this.data.filter(r=>{
-      const arr=[r.carrier,r.location,r.pic,r.email,r.contact,r.remarks];
-      return (arr[col]||"").toLowerCase().includes(val);
-    });
-    this.render();
-  },
-
-  sort(col){
-    const keys=["carrier","location","pic","email","contact","remarks"];
-    const k = keys[col];
-    this.filtered.sort((a,b)=> (a[k]||"").localeCompare(b[k]||""));
-    this.render();
-  },
-
-  status(msg){
-    status.innerText = msg;
-    setTimeout(()=>status.innerText="",2000);
+validate(d){
+  if(!d.carrier || !d.location){
+    alert("Carrier & Location required");
+    return false;
   }
+  return true;
+},
+
+async save(){
+  const d=this.getForm();
+  if(!this.validate(d)) return;
+  await addDoc(collection(db,"contacts"),d);
+  this.clear();
+  this.load();
+  this.status("Saved");
+},
+
+async update(){
+  if(!this.editId) return alert("Select record");
+  const d=this.getForm();
+  await updateDoc(doc(db,"contacts",this.editId),d);
+  this.clear();
+  this.load();
+  this.status("Updated");
+},
+
+edit(id){
+  const r=this.data.find(x=>x.id===id);
+  this.editId=id;
+  carrier.value=r.carrier;
+  location.value=r.location;
+  pic.value=r.pic;
+  email.value=r.email;
+  contact.value=r.contact;
+  remarks.value=r.remarks;
+},
+
+async del(id){
+  if(!confirm("Delete?")) return;
+  await deleteDoc(doc(db,"contacts",id));
+  this.load();
+},
+
+clear(){
+  this.editId=null;
+  carrier.value="";
+  location.value="";
+  pic.value="";
+  email.value="";
+  contact.value="";
+  remarks.value="";
+},
+
+filter(col,val){
+  val=val.toLowerCase();
+  this.filtered=this.data.filter(r=>{
+    const arr=[r.carrier,r.location,r.pic,r.email,r.contact,r.remarks];
+    return (arr[col]||"").toLowerCase().includes(val);
+  });
+  this.render();
+},
+
+globalSearch(val){
+  val=val.toLowerCase();
+  this.filtered=this.data.filter(r=>{
+    return Object.values(r).join(" ").toLowerCase().includes(val);
+  });
+  this.render();
+},
+
+sort(col){
+  const keys=["carrier","location","pic","email","contact","remarks"];
+  const k=keys[col];
+  this.filtered.sort((a,b)=>(a[k]||"").localeCompare(b[k]||""));
+  this.render();
+},
+
+exportSingleVCF(id){
+  const r=this.data.find(x=>x.id===id);
+  const vcf=`BEGIN:VCARD
+VERSION:3.0
+FN:${r.pic}
+ORG:${r.carrier}
+TEL:${r.contact}
+EMAIL:${r.email}
+END:VCARD`;
+
+  const blob=new Blob([vcf],{type:'text/vcard'});
+  const link=document.createElement("a");
+  link.href=URL.createObjectURL(blob);
+  link.download="contact.vcf";
+  link.click();
+},
+
+exportAllVCF(){
+  let vcf="";
+  this.data.forEach(r=>{
+    vcf+=`BEGIN:VCARD
+VERSION:3.0
+FN:${r.pic}
+ORG:${r.carrier}
+TEL:${r.contact}
+EMAIL:${r.email}
+END:VCARD\n`;
+  });
+
+  const blob=new Blob([vcf],{type:'text/vcard'});
+  const link=document.createElement("a");
+  link.href=URL.createObjectURL(blob);
+  link.download="all_contacts.vcf";
+  link.click();
+},
+
+status(msg){
+  status.innerText=msg;
+  setTimeout(()=>status.innerText="",2000);
+}
 
 };
 
-window.App = App;
+window.App=App;
 
 </script>
 
