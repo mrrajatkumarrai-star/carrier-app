@@ -2,8 +2,6 @@
 <html>
 <head>
   <title>Carrier App</title>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
 
   <style>
     body {
@@ -24,6 +22,7 @@
     input {
       margin:5px;
       padding:5px;
+      width:200px;
     }
 
     button {
@@ -53,19 +52,25 @@
 
 <body>
 
+<!-- LOGIN -->
 <div id="login" class="glass">
   <h3>Enter PIN</h3>
   <input type="password" id="pin">
   <button onclick="login()">Login</button>
 </div>
 
+<!-- APP -->
 <div id="app" style="display:none;">
 
 <div class="glass">
+<h3>Add Contact</h3>
+
 <input id="carrier" placeholder="Carrier">
 <input id="location" placeholder="Location"><br>
+
 <input id="pic" placeholder="PIC">
 <input id="email" placeholder="Email"><br>
+
 <input id="contact" placeholder="Contact">
 <input id="remarks" placeholder="Remarks"><br>
 
@@ -73,68 +78,101 @@
 </div>
 
 <div class="glass">
+<h3>Records</h3>
 <div id="data"></div>
 </div>
 
 </div>
 
-<script>
+<!-- ✅ FIREBASE (WORKING VERSION) -->
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+// 🔴 YOUR FIREBASE CONFIG (already correct)
 const firebaseConfig = {
-  apiKey: "YOUR_KEY",
-  authDomain: "YOUR_DOMAIN",
-  projectId: "YOUR_PROJECT_ID"
+  apiKey: "AIzaSyBy7H5e9924bwSMJmsDTLBfgeUu2ofsuKc",
+  authDomain: "c-rm-85c7c.firebaseapp.com",
+  projectId: "c-rm-85c7c",
+  storageBucket: "c-rm-85c7c.appspot.com",
+  messagingSenderId: "527591400910",
+  appId: "1:527591400910:web:07289d3360072a2b53f79f"
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+// INIT
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-function login(){
-  if(pin.value === "1234"){
-    login.style.display="none";
-    app.style.display="block";
+// LOGIN
+window.login = function() {
+  if (document.getElementById("pin").value === "1234") {
+    document.getElementById("login").style.display = "none";
+    document.getElementById("app").style.display = "block";
     load();
   } else {
     alert("Wrong PIN");
   }
-}
+};
 
-async function add(){
-  await db.collection("contacts").add({
-    carrier: carrier.value,
-    location: location.value,
-    pic: pic.value,
-    email: email.value,
-    contact: contact.value,
-    remarks: remarks.value
+// SAVE DATA
+window.add = async function() {
+  await addDoc(collection(db, "contacts"), {
+    carrier: document.getElementById("carrier").value,
+    location: document.getElementById("location").value,
+    pic: document.getElementById("pic").value,
+    email: document.getElementById("email").value,
+    contact: document.getElementById("contact").value,
+    remarks: document.getElementById("remarks").value
   });
+
+  clearForm();
   load();
-}
+};
 
-async function load(){
-  const snap = await db.collection("contacts").get();
-  let html = "<table><tr><th>Carrier</th><th>Location</th><th>PIC</th><th>Email</th><th>Contact</th><th>Remarks</th><th>Action</th></tr>";
+// LOAD DATA
+async function load() {
+  const snap = await getDocs(collection(db, "contacts"));
 
-  snap.forEach(doc=>{
-    const d = doc.data();
+  let html = "<table><tr>\
+  <th>Carrier</th><th>Location</th><th>PIC</th>\
+  <th>Email</th><th>Contact</th><th>Remarks</th><th>Action</th></tr>";
+
+  snap.forEach(docSnap => {
+    const d = docSnap.data();
+
     html += `<tr>
-      <td>${d.carrier}</td>
-      <td>${d.location}</td>
-      <td>${d.pic}</td>
-      <td>${d.email}</td>
-      <td>${d.contact}</td>
-      <td>${d.remarks}</td>
-      <td><button onclick="del('${doc.id}')">Delete</button></td>
+      <td>${d.carrier || ""}</td>
+      <td>${d.location || ""}</td>
+      <td>${d.pic || ""}</td>
+      <td>${d.email || ""}</td>
+      <td>${d.contact || ""}</td>
+      <td>${d.remarks || ""}</td>
+      <td><button onclick="del('${docSnap.id}')">Delete</button></td>
     </tr>`;
   });
 
   html += "</table>";
-  data.innerHTML = html;
+
+  document.getElementById("data").innerHTML = html;
 }
 
-async function del(id){
-  await db.collection("contacts").doc(id).delete();
+// DELETE
+window.del = async function(id) {
+  await deleteDoc(doc(db, "contacts", id));
   load();
+};
+
+// CLEAR FORM
+function clearForm() {
+  document.getElementById("carrier").value = "";
+  document.getElementById("location").value = "";
+  document.getElementById("pic").value = "";
+  document.getElementById("email").value = "";
+  document.getElementById("contact").value = "";
+  document.getElementById("remarks").value = "";
 }
+
 </script>
 
 </body>
