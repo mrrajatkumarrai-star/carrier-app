@@ -1,12 +1,8 @@
 async function loadPage(page){
-
   const res = await fetch(page);
   const html = await res.text();
+  document.getElementById("app").innerHTML = html;
 
-  const container = document.getElementById("app");
-  container.innerHTML = html;
-
-  // 🔴 IMPORTANT: initialize page after load
   if(page === "contacts.html" && window.initContacts){
     window.initContacts();
   }
@@ -15,3 +11,6 @@ async function loadPage(page){
     window.initRates();
   }
 }
+
+// default load
+loadPage("contacts.html");
