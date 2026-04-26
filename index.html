@@ -1,33 +1,45 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Carrier App</title>
+  <title>Carrier CRM System</title>
 
   <style>
     body {
       font-family: Calibri;
       font-size: 10pt;
-      background: linear-gradient(135deg,#e6eef8,#ffffff);
-      padding:20px;
+      background:#f3f6fb;
+      margin:0;
+      padding:0;
     }
 
-    .glass {
-      background: rgba(255,255,255,0.3);
-      backdrop-filter: blur(10px);
+    .header {
+      background:#217346;
+      color:white;
+      padding:12px;
+      font-weight:bold;
+    }
+
+    .container {
       padding:15px;
-      border-radius:10px;
-      margin-bottom:15px;
+    }
+
+    .panel {
+      background:white;
+      border:1px solid #ccc;
+      padding:10px;
+      margin-bottom:10px;
     }
 
     input {
-      margin:5px;
       padding:5px;
-      width:200px;
+      margin:3px;
+      border:1px solid #ccc;
+      width:150px;
     }
 
     button {
-      padding:5px 10px;
-      background:#007bff;
+      padding:6px 12px;
+      background:#217346;
       color:white;
       border:none;
       cursor:pointer;
@@ -36,61 +48,101 @@
     table {
       width:100%;
       border-collapse: collapse;
+      margin-top:10px;
     }
 
     th, td {
-      border:1px solid #ccc;
-      padding:5px;
+      border:1px solid #d0d7e5;
+      padding:6px;
     }
 
     th {
-      background:#007bff;
-      color:white;
+      background:#e9edf5;
+      cursor:pointer;
+    }
+
+    tr:hover {
+      background:#f1f7ff;
+    }
+
+    .status {
+      color:#217346;
+      font-weight:bold;
     }
   </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div id="login" class="glass">
-  <h3>Enter PIN</h3>
+<div class="header">Carrier CRM System</div>
+
+<div class="container">
+
+<div id="loginPanel" class="panel">
+  <h3>Login</h3>
   <input type="password" id="pin">
-  <button onclick="login()">Login</button>
+  <button onclick="App.login()">Login</button>
 </div>
 
-<!-- APP -->
-<div id="app" style="display:none;">
+<div id="appPanel" style="display:none;">
 
-<div class="glass">
-<h3>Add Contact</h3>
+<div class="panel">
+<h3>Contact Entry</h3>
 
 <input id="carrier" placeholder="Carrier">
-<input id="location" placeholder="Location"><br>
-
+<input id="location" placeholder="Location">
 <input id="pic" placeholder="PIC">
-<input id="email" placeholder="Email"><br>
-
+<input id="email" placeholder="Email">
 <input id="contact" placeholder="Contact">
-<input id="remarks" placeholder="Remarks"><br>
+<input id="remarks" placeholder="Remarks">
 
-<button onclick="add()">Save</button>
+<button onclick="App.save()">Save</button>
+<button onclick="App.update()">Update</button>
+<button onclick="App.clear()">Clear</button>
+
+<div class="status" id="status"></div>
 </div>
 
-<div class="glass">
-<h3>Records</h3>
-<div id="data"></div>
+<div class="panel">
+
+<h3>Search</h3>
+<input placeholder="Carrier" onkeyup="App.filter(0,this.value)">
+<input placeholder="Location" onkeyup="App.filter(1,this.value)">
+<input placeholder="PIC" onkeyup="App.filter(2,this.value)">
+<input placeholder="Email" onkeyup="App.filter(3,this.value)">
+
+</div>
+
+<div class="panel">
+
+<table>
+<thead>
+<tr>
+<th onclick="App.sort(0)">Carrier</th>
+<th onclick="App.sort(1)">Location</th>
+<th onclick="App.sort(2)">PIC</th>
+<th onclick="App.sort(3)">Email</th>
+<th onclick="App.sort(4)">Contact</th>
+<th onclick="App.sort(5)">Remarks</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="tableData"></tbody>
+
+</table>
+
+</div>
+
 </div>
 
 </div>
 
-<!-- ✅ FIREBASE (WORKING VERSION) -->
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-// 🔴 YOUR FIREBASE CONFIG (already correct)
 const firebaseConfig = {
   apiKey: "AIzaSyBy7H5e9924bwSMJmsDTLBfgeUu2ofsuKc",
   authDomain: "c-rm-85c7c.firebaseapp.com",
@@ -100,78 +152,146 @@ const firebaseConfig = {
   appId: "1:527591400910:web:07289d3360072a2b53f79f"
 };
 
-// INIT
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// LOGIN
-window.login = function() {
-  if (document.getElementById("pin").value === "1234") {
-    document.getElementById("login").style.display = "none";
-    document.getElementById("app").style.display = "block";
-    load();
-  } else {
-    alert("Wrong PIN");
+const App = {
+
+  data: [],
+  filtered: [],
+  editId: null,
+
+  login() {
+    if(pin.value === "1234"){
+      loginPanel.style.display="none";
+      appPanel.style.display="block";
+      this.load();
+    } else {
+      alert("Wrong PIN");
+    }
+  },
+
+  async load() {
+    const snap = await getDocs(collection(db, "contacts"));
+    this.data = [];
+    snap.forEach(d=>{
+      this.data.push({id:d.id, ...d.data()});
+    });
+    this.filtered = this.data;
+    this.render();
+  },
+
+  render() {
+    let html = "";
+    this.filtered.forEach(row=>{
+      html += `<tr>
+        <td>${row.carrier||""}</td>
+        <td>${row.location||""}</td>
+        <td>${row.pic||""}</td>
+        <td>${row.email||""}</td>
+        <td>${row.contact||""}</td>
+        <td>${row.remarks||""}</td>
+        <td>
+          <button onclick="App.edit('${row.id}')">Edit</button>
+          <button onclick="App.del('${row.id}')">Delete</button>
+        </td>
+      </tr>`;
+    });
+    tableData.innerHTML = html;
+  },
+
+  getForm() {
+    return {
+      carrier: carrier.value,
+      location: location.value,
+      pic: pic.value,
+      email: email.value,
+      contact: contact.value,
+      remarks: remarks.value
+    };
+  },
+
+  validate(d){
+    if(!d.carrier || !d.location){
+      alert("Carrier & Location required");
+      return false;
+    }
+    return true;
+  },
+
+  async save(){
+    const d = this.getForm();
+    if(!this.validate(d)) return;
+
+    await addDoc(collection(db,"contacts"), d);
+    this.status("Saved");
+    this.clear();
+    this.load();
+  },
+
+  async update(){
+    if(!this.editId) return alert("Select record");
+
+    const d = this.getForm();
+    await updateDoc(doc(db,"contacts",this.editId), d);
+
+    this.status("Updated");
+    this.clear();
+    this.load();
+  },
+
+  edit(id){
+    const r = this.data.find(x=>x.id===id);
+    this.editId = id;
+
+    carrier.value = r.carrier;
+    location.value = r.location;
+    pic.value = r.pic;
+    email.value = r.email;
+    contact.value = r.contact;
+    remarks.value = r.remarks;
+  },
+
+  async del(id){
+    if(!confirm("Delete?")) return;
+    await deleteDoc(doc(db,"contacts",id));
+    this.load();
+  },
+
+  clear(){
+    this.editId=null;
+    carrier.value="";
+    location.value="";
+    pic.value="";
+    email.value="";
+    contact.value="";
+    remarks.value="";
+  },
+
+  filter(col,val){
+    val = val.toLowerCase();
+    this.filtered = this.data.filter(r=>{
+      const arr=[r.carrier,r.location,r.pic,r.email,r.contact,r.remarks];
+      return (arr[col]||"").toLowerCase().includes(val);
+    });
+    this.render();
+  },
+
+  sort(col){
+    const keys=["carrier","location","pic","email","contact","remarks"];
+    const k = keys[col];
+    this.filtered.sort((a,b)=> (a[k]||"").localeCompare(b[k]||""));
+    this.render();
+  },
+
+  status(msg){
+    status.innerText = msg;
+    setTimeout(()=>status.innerText="",2000);
   }
+
 };
 
-// SAVE DATA
-window.add = async function() {
-  await addDoc(collection(db, "contacts"), {
-    carrier: document.getElementById("carrier").value,
-    location: document.getElementById("location").value,
-    pic: document.getElementById("pic").value,
-    email: document.getElementById("email").value,
-    contact: document.getElementById("contact").value,
-    remarks: document.getElementById("remarks").value
-  });
-
-  clearForm();
-  load();
-};
-
-// LOAD DATA
-async function load() {
-  const snap = await getDocs(collection(db, "contacts"));
-
-  let html = "<table><tr>\
-  <th>Carrier</th><th>Location</th><th>PIC</th>\
-  <th>Email</th><th>Contact</th><th>Remarks</th><th>Action</th></tr>";
-
-  snap.forEach(docSnap => {
-    const d = docSnap.data();
-
-    html += `<tr>
-      <td>${d.carrier || ""}</td>
-      <td>${d.location || ""}</td>
-      <td>${d.pic || ""}</td>
-      <td>${d.email || ""}</td>
-      <td>${d.contact || ""}</td>
-      <td>${d.remarks || ""}</td>
-      <td><button onclick="del('${docSnap.id}')">Delete</button></td>
-    </tr>`;
-  });
-
-  html += "</table>";
-
-  document.getElementById("data").innerHTML = html;
-}
-
-// DELETE
-window.del = async function(id) {
-  await deleteDoc(doc(db, "contacts", id));
-  load();
-};
-
-// CLEAR FORM
-function clearForm() {
-  document.getElementById("carrier").value = "";
-  document.getElementById("location").value = "";
-  document.getElementById("pic").value = "";
-  document.getElementById("email").value = "";
-  document.getElementById("contact").value = "";
-  document.getElementById("remarks").value = "";
-}
+window.App = App;
 
 </script>
 
