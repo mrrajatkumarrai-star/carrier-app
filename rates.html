@@ -1,116 +1,33 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Rates Management</title>
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-
-<style>
-body{
-  font-family:Calibri;
-  font-size:10pt;
-  background:linear-gradient(135deg,#d9dde3,#eef1f5);
-  margin:0;
-}
-
-.glass{
-  background:rgba(255,255,255,0.4);
-  backdrop-filter:blur(10px);
-  border:1px solid rgba(0,0,0,0.1);
-  padding:10px;
-  margin:10px;
-  border-radius:8px;
-}
-
-input{
-  height:24px;
-  padding:3px;
-  margin:2px;
-  border:1px solid #ccc;
-}
-
-button{
-  height:26px;
-  padding:4px 8px;
-  background:#57606f;
-  color:white;
-  border:none;
-  cursor:pointer;
-}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-}
-
-th,td{
-  border:1px solid #cfd6e0;
-  padding:4px;
-  white-space:nowrap;
-}
-
-th{
-  background:#e5e9f2;
-  cursor:pointer;
-}
-
-.icon{
-  border:none;
-  background:none;
-  cursor:pointer;
-  font-size:14px;
-  margin:0 2px;
-}
-.copy{color:#3742fa;}
-.wa{color:#25D366;}
-.del{color:#e84118;}
-.edit{color:#2f3542;}
-
-.status{
-  font-weight:bold;
-  color:#2f3542;
-}
-</style>
-</head>
-
-<body>
-
 <div class="glass">
 
-<input id="carrier" placeholder="Carrier">
-<input id="por" placeholder="POR">
-<input id="pol" placeholder="POL">
-<input id="pod" placeholder="POD">
-<input id="fpod" placeholder="FPOD">
+<input id="r_carrier" placeholder="Carrier">
+<input id="r_por" placeholder="POR">
+<input id="r_pol" placeholder="POL">
+<input id="r_pod" placeholder="POD">
+<input id="r_fpod" placeholder="FPOD">
 
-<input id="dv20" placeholder="20DV">
-<input id="hc40" placeholder="40HC">
+<input id="r_20dv" placeholder="20DV">
+<input id="r_40hc" placeholder="40HC">
 
-<input id="validity" placeholder="Validity">
-<input id="ft" placeholder="F/T Days">
-<input id="tt" placeholder="TT Days">
+<input id="r_validity" placeholder="Validity">
+<input id="r_ft" placeholder="F/T Days">
+<input id="r_tt" placeholder="TT Days">
 
-<input id="via" placeholder="Via">
-<input id="remarks" placeholder="Remarks">
+<input id="r_via" placeholder="Via">
+<input id="r_remarks" placeholder="Remarks">
 
-<button onclick="App.save()">Save</button>
-<button onclick="App.update()">Update</button>
-<button onclick="App.clear()">Clear</button>
-
-<span id="status" class="status"></span>
+<button onclick="Rates.save()">Save</button>
 
 </div>
 
 <div class="glass">
-<input placeholder="Search All" onkeyup="App.search(this.value)">
-</div>
 
-<div class="glass">
+<input placeholder="Search" onkeyup="Rates.search(this.value)">
 
 <table>
 <thead>
 <tr>
-<th onclick="App.sort('carrier')">Carrier</th>
+<th>Carrier</th>
 <th>POR</th>
 <th>POL</th>
 <th>POD</th>
@@ -126,209 +43,8 @@ th{
 </tr>
 </thead>
 
-<tbody id="data"></tbody>
+<tbody id="ratesData"></tbody>
 
 </table>
 
 </div>
-
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBy7H5e9924bwSMJmsDTLBfgeUu2ofsuKc",
-  authDomain: "c-rm-85c7c.firebaseapp.com",
-  projectId: "c-rm-85c7c",
-  storageBucket: "c-rm-85c7c.appspot.com",
-  messagingSenderId: "527591400910",
-  appId: "1:527591400910:web:07289d3360072a2b53f79f"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const $ = (id) => document.getElementById(id);
-
-const App = {
-
-data:[],
-filtered:[],
-editId:null,
-
-normalize(v){return (v||"").toLowerCase().trim();},
-
-isDuplicate(d){
-return this.data.some(r=>
-this.normalize(r.carrier)===this.normalize(d.carrier) &&
-this.normalize(r.pol)===this.normalize(d.pol) &&
-this.normalize(r.pod)===this.normalize(d.pod) &&
-this.normalize(r.dv20)===this.normalize(d.dv20) &&
-this.normalize(r.hc40)===this.normalize(d.hc40)
-);
-},
-
-status(msg){
-$("status").innerText=msg;
-setTimeout(()=>$("status").innerText="",2000);
-},
-
-async load(){
-const snap=await getDocs(collection(db,"rates"));
-this.data=[];
-snap.forEach(d=>this.data.push({id:d.id,...d.data()}));
-this.filtered=this.data;
-this.render();
-},
-
-render(){
-let html="";
-this.filtered.forEach(r=>{
-html+=`<tr>
-<td>${r.carrier||""}</td>
-<td>${r.por||""}</td>
-<td>${r.pol||""}</td>
-<td>${r.pod||""}</td>
-<td>${r.fpod||""}</td>
-<td>${r.dv20||""}</td>
-<td>${r.hc40||""}</td>
-<td>${r.validity||""}</td>
-<td>${r.ft||""}</td>
-<td>${r.tt||""}</td>
-<td>${r.via||""}</td>
-<td>${r.remarks||""}</td>
-
-<td>
-<button class="icon edit" onclick="App.edit('${r.id}')"><i class="bi bi-pencil"></i></button>
-<button class="icon del" onclick="App.del('${r.id}')"><i class="bi bi-trash"></i></button>
-<button class="icon copy" onclick="App.copy('${r.id}')"><i class="bi bi-copy"></i></button>
-<button class="icon wa" onclick="App.wa('${r.id}')"><i class="bi bi-whatsapp"></i></button>
-</td>
-
-</tr>`;
-});
-$("data").innerHTML=html;
-},
-
-getForm(){
-return{
-carrier:$("carrier").value,
-por:$("por").value,
-pol:$("pol").value,
-pod:$("pod").value,
-fpod:$("fpod").value,
-dv20:$("dv20").value,
-hc40:$("hc40").value,
-validity:$("validity").value,
-ft:$("ft").value,
-tt:$("tt").value,
-via:$("via").value,
-remarks:$("remarks").value
-};
-},
-
-format(r){
-let out=[];
-function add(k,v){if(v && v.trim()!="") out.push(k+": "+v);}
-
-add("CARRIER",r.carrier);
-add("POR",r.por);
-add("POL",r.pol);
-add("POD",r.pod);
-add("FPOD",r.fpod);
-add("20DV",r.dv20);
-add("40HC",r.hc40);
-add("VALIDITY",r.validity);
-add("F/T (DAYS)",r.ft);
-add("TT (DAYS)",r.tt);
-add("VIA",r.via);
-add("REMARKS",r.remarks);
-
-return out.join("\n");
-},
-
-async save(){
-const d=this.getForm();
-
-if(this.isDuplicate(d)){
-this.status("Duplicate rate exists");
-return;
-}
-
-await addDoc(collection(db,"rates"),d);
-this.clear();
-this.load();
-this.status("Saved");
-},
-
-async update(){
-if(!this.editId){this.status("Select record");return;}
-const d=this.getForm();
-await updateDoc(doc(db,"rates",this.editId),d);
-this.clear();
-this.load();
-this.status("Updated");
-},
-
-edit(id){
-const r=this.data.find(x=>x.id===id);
-this.editId=id;
-
-$("carrier").value=r.carrier||"";
-$("por").value=r.por||"";
-$("pol").value=r.pol||"";
-$("pod").value=r.pod||"";
-$("fpod").value=r.fpod||"";
-$("dv20").value=r.dv20||"";
-$("hc40").value=r.hc40||"";
-$("validity").value=r.validity||"";
-$("ft").value=r.ft||"";
-$("tt").value=r.tt||"";
-$("via").value=r.via||"";
-$("remarks").value=r.remarks||"";
-},
-
-async del(id){
-await deleteDoc(doc(db,"rates",id));
-this.load();
-},
-
-clear(){
-this.editId=null;
-document.querySelectorAll("input").forEach(i=>i.value="");
-},
-
-search(val){
-val=val.toLowerCase();
-this.filtered=this.data.filter(r=>
-Object.values(r).join(" ").toLowerCase().includes(val)
-);
-this.render();
-},
-
-sort(key){
-this.filtered.sort((a,b)=>(a[key]||"").localeCompare(b[key]||""));
-this.render();
-},
-
-copy(id){
-const r=this.data.find(x=>x.id===id);
-navigator.clipboard.writeText(this.format(r));
-this.status("Copied");
-},
-
-wa(id){
-const r=this.data.find(x=>x.id===id);
-const text=encodeURIComponent(this.format(r));
-window.open(`https://wa.me/?text=${text}`);
-}
-
-};
-
-window.App=App;
-App.load();
-
-</script>
-
-</body>
-</html>
