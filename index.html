@@ -14,18 +14,14 @@
   --glass: rgba(255,255,255,0.55);
   --border: rgba(0,0,0,0.08);
 }
-
 *{box-sizing:border-box}
-
 body{
   margin:0;
   font-family: Calibri, Arial;
   font-size:10pt;
   background: linear-gradient(135deg,var(--bg1),var(--bg2));
 }
-
 .container{padding:10px;width:100%}
-
 .glass{
   background: var(--glass);
   backdrop-filter: blur(10px);
@@ -34,12 +30,11 @@ body{
   padding:10px;
   margin-bottom:10px;
 }
-
 .row{display:flex;flex-wrap:wrap;gap:6px}
 
 input{
-  height:30px;
-  padding:5px;
+  height:28px;
+  padding:4px;
   border:1px solid #cfd6e0;
   border-radius:6px;
   flex:1;
@@ -47,7 +42,7 @@ input{
 }
 
 button{
-  height:32px;
+  height:30px;
   padding:0 10px;
   border:none;
   border-radius:6px;
@@ -58,22 +53,34 @@ button{
 button.primary{background:#2563eb}
 button.secondary{background:#9ca3af;color:#111}
 
-.table-wrap{overflow:auto;max-height:70vh}
+.table-wrap{overflow:auto;max-height:75vh}
 
-table{width:100%;border-collapse:collapse;font-size:9pt}
-th,td{border:1px solid #d7dee8;padding:5px;white-space:nowrap}
+table{width:100%;border-collapse:collapse;font-size:9px}
+th,td{
+  border:1px solid #d7dee8;
+  padding:2px 5px;
+  line-height:1.2;
+  white-space:nowrap;
+}
 th{position:sticky;top:0;background:#e9edf5}
 
-.actions{text-align:center;width:120px}
+tr{height:22px}
+
+.actions{text-align:center;width:110px}
 
 .icon-btn{
-  border:none;background:none;cursor:pointer;margin:0 2px;font-size:14px;
+  border:none;background:none;cursor:pointer;margin:0 1px;font-size:12px;
 }
 .icon-copy{color:#3742fa}
 .icon-wa{color:#25D366}
 .icon-edit{color:#111}
 .icon-del{color:#dc2626}
 .icon-dl{color:#0ea5e9}
+
+.filters input{
+  font-size:8px;
+  height:22px;
+}
 
 @media(max-width:768px){
   .row{flex-direction:column}
@@ -85,6 +92,7 @@ th{position:sticky;top:0;background:#e9edf5}
 <body>
 <div class="container">
 
+<!-- FORM -->
 <div class="glass">
 <div class="row">
 <input id="carrier" placeholder="CARRIER">
@@ -108,17 +116,35 @@ th{position:sticky;top:0;background:#e9edf5}
 <span id="status"></span>
 </div>
 
+<!-- SEARCH -->
+<div class="glass">
+<div class="row">
+<input id="searchAll" placeholder="SEARCH ALL">
+</div>
+</div>
+
+<!-- TABLE -->
 <div class="glass table-wrap">
 <table>
 <thead>
 <tr>
-<th>CARRIER</th>
-<th>LOCATION</th>
-<th>PIC</th>
-<th>EMAIL</th>
-<th>CONTACT</th>
-<th>REMARKS</th>
+<th data-key="carrier">CARRIER</th>
+<th data-key="location">LOCATION</th>
+<th data-key="pic">PIC</th>
+<th data-key="email">EMAIL</th>
+<th data-key="contact">CONTACT</th>
+<th data-key="remarks">REMARKS</th>
 <th>ACTION</th>
+</tr>
+
+<tr class="filters">
+<th><input data-col="carrier"></th>
+<th><input data-col="location"></th>
+<th><input data-col="pic"></th>
+<th><input data-col="email"></th>
+<th><input data-col="contact"></th>
+<th><input data-col="remarks"></th>
+<th></th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
@@ -232,6 +258,29 @@ END:VCARD`;
   a.download="contact.vcf";
   a.click();
  }
+});
+
+/* SEARCH */
+$("searchAll").addEventListener("input",e=>{
+ const v=e.target.value.toLowerCase();
+ state.view=state.data.filter(r=>Object.values(r).join(" ").toLowerCase().includes(v));
+ render();
+});
+
+/* FILTER */
+document.querySelectorAll(".filters input").forEach(inp=>{
+ inp.addEventListener("input",()=>{
+  const filters={};
+  document.querySelectorAll(".filters input").forEach(i=>{
+    filters[i.dataset.col]=i.value.toLowerCase();
+  });
+  state.view=state.data.filter(r=>{
+    return Object.keys(filters).every(k=>{
+      return !filters[k] || (r[k]||"").toLowerCase().includes(filters[k]);
+    });
+  });
+  render();
+ });
 });
 
 /* SAVE */
