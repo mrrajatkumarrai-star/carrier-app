@@ -6,32 +6,25 @@
 <title>CRM</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <style>
 :root{
   --bg1:#e7ebf0; --bg2:#f6f8fb;
   --glass: rgba(255,255,255,0.55);
   --border: rgba(0,0,0,0.08);
-  --text:#1f2937;
-  --accent:#3b82f6;
 }
 
 *{box-sizing:border-box}
 
 body{
   margin:0;
-  font-family: Calibri, Arial, sans-serif;
+  font-family: Calibri, Arial;
   font-size:10pt;
-  color:var(--text);
   background: linear-gradient(135deg,var(--bg1),var(--bg2));
 }
 
-/* FULL WIDTH */
-.container{
-  padding:12px;
-  width:100%;
-  max-width:100%;
-}
+.container{padding:10px;width:100%}
 
 .glass{
   background: var(--glass);
@@ -42,28 +35,19 @@ body{
   margin-bottom:10px;
 }
 
-.row{
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
-  align-items:center;
-}
+.row{display:flex;flex-wrap:wrap;gap:6px}
 
-/* INPUT AUTO CAPS */
 input{
-  height:24px;
-  padding:3px 6px;
+  height:30px;
+  padding:5px;
   border:1px solid #cfd6e0;
   border-radius:6px;
-  outline:none;
-  min-width:140px;
+  flex:1;
   text-transform: uppercase;
 }
 
-input:focus{border-color:var(--accent)}
-
 button{
-  height:26px;
+  height:32px;
   padding:0 10px;
   border:none;
   border-radius:6px;
@@ -71,133 +55,75 @@ button{
   color:#fff;
   cursor:pointer;
 }
-
-button.secondary{background:#9ca3af;color:#111827}
 button.primary{background:#2563eb}
+button.secondary{background:#9ca3af;color:#111}
 
-.status{
-  margin-left:10px;
-  font-weight:600;
-  color:#065f46;
-}
+.table-wrap{overflow:auto;max-height:70vh}
 
-.table-wrap{
-  overflow:auto;
-  max-height:70vh;
-  border-radius:8px;
-}
+table{width:100%;border-collapse:collapse;font-size:9pt}
+th,td{border:1px solid #d7dee8;padding:5px;white-space:nowrap}
+th{position:sticky;top:0;background:#e9edf5}
 
-table{
-  width:100%;
-  border-collapse:collapse;
-}
-
-th, td{
-  border:1px solid #d7dee8;
-  padding:3px 6px;
-  white-space:nowrap;
-}
-
-th{
-  position:sticky;
-  top:0;
-  background:#e9edf5;
-  font-weight:600;
-  cursor:pointer;
-}
-
-tr:nth-child(even){background:rgba(255,255,255,0.4)}
-tr:hover{background:#eef3ff}
-
-.filters input{
-  width:95%;
-  font-size:9pt;
-  margin-top:3px;
-}
-
-.actions{
-  text-align:center;
-  width:120px;
-}
+.actions{text-align:center;width:120px}
 
 .icon-btn{
-  border:none;
-  background:none;
-  cursor:pointer;
-  margin:0 2px;
-  font-size:14px;
+  border:none;background:none;cursor:pointer;margin:0 2px;font-size:14px;
 }
-
 .icon-copy{color:#3742fa}
 .icon-wa{color:#25D366}
-.icon-edit{color:#111827}
+.icon-edit{color:#111}
 .icon-del{color:#dc2626}
 .icon-dl{color:#0ea5e9}
+
+@media(max-width:768px){
+  .row{flex-direction:column}
+  button{width:100%}
+}
 </style>
 </head>
 
 <body>
-
 <div class="container">
 
-  <!-- FORM -->
-  <div class="glass">
-    <div class="row">
-      <input id="carrier" placeholder="CARRIER">
-      <input id="location" placeholder="LOCATION">
-      <input id="pic" placeholder="PIC">
-      <input id="email" placeholder="EMAIL">
-      <input id="contact" placeholder="CONTACT">
-      <input id="remarks" placeholder="REMARKS" style="min-width:220px">
+<div class="glass">
+<div class="row">
+<input id="carrier" placeholder="CARRIER">
+<input id="location" placeholder="LOCATION">
+<input id="pic" placeholder="PIC">
+<input id="email" placeholder="EMAIL">
+<input id="contact" placeholder="CONTACT">
+<input id="remarks" placeholder="REMARKS">
 
-      <button class="primary" id="btnSave">SAVE</button>
-      <button id="btnUpdate">UPDATE</button>
-      <button class="secondary" id="btnClear">CLEAR</button>
-      <button id="btnExportAll">EXPORT VCF</button>
+<button class="primary" id="btnSave">SAVE</button>
+<button id="btnUpdate">UPDATE</button>
+<button class="secondary" id="btnClear">CLEAR</button>
+<button id="btnExportAll">EXPORT VCF</button>
+</div>
 
-      <span id="status" class="status"></span>
-    </div>
-  </div>
+<div class="row" style="margin-top:6px;">
+<input type="file" id="excelUpload">
+<button id="btnUploadExcel">UPLOAD EXCEL</button>
+</div>
 
-  <!-- SEARCH -->
-  <div class="glass">
-    <div class="row">
-      <input id="searchAll" placeholder="SEARCH ALL">
-      <input id="fCarrier" placeholder="CARRIER FILTER">
-      <input id="fLocation" placeholder="LOCATION FILTER">
-      <input id="fPic" placeholder="PIC FILTER">
-      <input id="fEmail" placeholder="EMAIL FILTER">
-      <input id="fContact" placeholder="CONTACT FILTER">
-      <input id="fRemarks" placeholder="REMARKS FILTER">
-    </div>
-  </div>
+<span id="status"></span>
+</div>
 
-  <!-- TABLE -->
-  <div class="glass table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th data-key="carrier">CARRIER</th>
-          <th data-key="location">LOCATION</th>
-          <th data-key="pic">PIC</th>
-          <th data-key="email">EMAIL</th>
-          <th data-key="contact">CONTACT</th>
-          <th data-key="remarks">REMARKS</th>
-          <th class="actions">ACTION</th>
-        </tr>
-        <tr class="filters">
-          <th><input data-col="carrier"></th>
-          <th><input data-col="location"></th>
-          <th><input data-col="pic"></th>
-          <th><input data-col="email"></th>
-          <th><input data-col="contact"></th>
-          <th><input data-col="remarks"></th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
-  </div>
+<div class="glass table-wrap">
+<table>
+<thead>
+<tr>
+<th>CARRIER</th>
+<th>LOCATION</th>
+<th>PIC</th>
+<th>EMAIL</th>
+<th>CONTACT</th>
+<th>REMARKS</th>
+<th>ACTION</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
 
 </div>
 
@@ -207,167 +133,166 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/fireba
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBy7H5e9924bwSMJmsDTLBfgeUu2ofsuKc",
-  authDomain: "c-rm-85c7c.firebaseapp.com",
-  projectId: "c-rm-85c7c",
-  storageBucket: "c-rm-85c7c.appspot.com",
-  messagingSenderId: "527591400910",
-  appId: "1:527591400910:web:07289d3360072a2b53f79f"
+  apiKey:"AIzaSy...",
+  authDomain:"c-rm-85c7c.firebaseapp.com",
+  projectId:"c-rm-85c7c"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const state = {
-  data: [],
-  view: [],
-  editId: null
-};
+const state={data:[],view:[],editId:null};
+const $=id=>document.getElementById(id);
 
-const $ = id => document.getElementById(id);
-
-/* FORCE CAPS (JS LAYER) */
-function forceUppercase(el){
-  el.value = el.value.toUpperCase();
-}
-
-document.querySelectorAll("input").forEach(inp=>{
-  inp.addEventListener("input", ()=> forceUppercase(inp));
+/* CAPS */
+document.querySelectorAll("input").forEach(i=>{
+  i.addEventListener("input",()=>i.value=i.value.toUpperCase());
 });
 
-/* HELPERS */
-function setStatus(msg){
-  $("status").textContent = msg;
-  setTimeout(()=> $("status").textContent = "", 1800);
+function setStatus(m){
+ $("status").innerText=m;
+ setTimeout(()=>$("status").innerText="",1500);
 }
 
-function getForm(){
-  return {
-    carrier: $("carrier").value.trim(),
-    location: $("location").value.trim(),
-    pic: $("pic").value.trim(),
-    email: $("email").value.trim(),
-    contact: $("contact").value.trim(),
-    remarks: $("remarks").value.trim()
-  };
-}
-
-function clearForm(){
-  ["carrier","location","pic","email","contact","remarks"].forEach(id => $(id).value="");
-  state.editId = null;
-}
-
-function validate(d){
-  if(!d.carrier || !d.location){
-    setStatus("CARRIER & LOCATION REQUIRED");
-    return false;
-  }
-  return true;
-}
-
-/* DATA */
+/* LOAD */
 async function load(){
-  const snap = await getDocs(collection(db, "contacts"));
-  state.data = [];
-  snap.forEach(d => state.data.push({id:d.id, ...d.data()}));
-  state.view = [...state.data];
-  render();
+ const snap=await getDocs(collection(db,"contacts"));
+ state.data=[];
+ snap.forEach(d=>state.data.push({id:d.id,...d.data()}));
+ state.view=[...state.data];
+ render();
 }
 
 /* RENDER */
 function render(){
-  const tbody = $("tbody");
-  let html = "";
+ let html="";
+ state.view.forEach(r=>{
+ html+=`<tr>
+<td>${r.carrier||""}</td>
+<td>${r.location||""}</td>
+<td>${r.pic||""}</td>
 
-  state.view.forEach(r=>{
-    html += `
-      <tr>
-        <td>${r.carrier||""}</td>
-        <td>${r.location||""}</td>
-        <td>${r.pic||""}</td>
-        <td>${r.email||""}</td>
-        <td>${r.contact||""}</td>
-        <td>${r.remarks||""}</td>
-        <td class="actions">
-          <button data-edit="${r.id}">✏</button>
-          <button data-del="${r.id}">🗑</button>
-        </td>
-      </tr>`;
-  });
+<td>${r.email||""}
+<button class="icon-btn icon-copy" data-copy="${r.email||""}"><i class="bi bi-copy"></i></button>
+</td>
 
-  tbody.innerHTML = html;
+<td>${r.contact||""}
+<button class="icon-btn icon-copy" data-copy="${r.contact||""}"><i class="bi bi-copy"></i></button>
+<button class="icon-btn icon-wa" data-wa="${r.contact||""}"><i class="bi bi-whatsapp"></i></button>
+</td>
+
+<td>${r.remarks||""}</td>
+
+<td class="actions">
+<button class="icon-btn icon-edit" data-edit="${r.id}"><i class="bi bi-pencil"></i></button>
+<button class="icon-btn icon-del" data-del="${r.id}"><i class="bi bi-trash"></i></button>
+<button class="icon-btn icon-dl" data-vcf="${r.id}"><i class="bi bi-download"></i></button>
+</td>
+</tr>`;
+ });
+ $("tbody").innerHTML=html;
 }
 
 /* EVENTS */
-document.body.addEventListener("click", async (e)=>{
-  const t = e.target.closest("button");
-  if(!t) return;
+document.body.addEventListener("click",async e=>{
+ const t=e.target.closest("button");
+ if(!t) return;
 
-  if(t.dataset.edit){
-    const r = state.data.find(x=>x.id===t.dataset.edit);
-    if(!r) return;
+ if(t.dataset.copy){
+  navigator.clipboard.writeText(t.dataset.copy);
+  setStatus("COPIED");
+ }
 
-    state.editId = r.id;
-    $("carrier").value = r.carrier||"";
-    $("location").value = r.location||"";
-    $("pic").value = r.pic||"";
-    $("email").value = r.email||"";
-    $("contact").value = r.contact||"";
-    $("remarks").value = r.remarks||"";
+ if(t.dataset.wa){
+  const n=t.dataset.wa.replace(/\D/g,'');
+  window.open(`https://wa.me/${n}`,"_blank");
+ }
 
-    setStatus("EDITING");
-  }
+ if(t.dataset.edit){
+  const r=state.data.find(x=>x.id===t.dataset.edit);
+  Object.keys(r).forEach(k=>$(k)&&($(k).value=r[k]||""));
+  state.editId=r.id;
+ }
 
-  if(t.dataset.del){
-    await deleteDoc(doc(db, "contacts", t.dataset.del));
-    setStatus("DELETED");
-    await load();
-  }
+ if(t.dataset.del){
+  await deleteDoc(doc(db,"contacts",t.dataset.del));
+  load();
+ }
+
+ if(t.dataset.vcf){
+  const r=state.data.find(x=>x.id===t.dataset.vcf);
+  const v=`BEGIN:VCARD
+FN:${r.pic}
+ORG:${r.carrier}
+TEL:${r.contact}
+EMAIL:${r.email}
+END:VCARD`;
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([v]));
+  a.download="contact.vcf";
+  a.click();
+ }
 });
 
 /* SAVE */
-$("btnSave").addEventListener("click", async ()=>{
-  const d = getForm();
-  if(!validate(d)) return;
-
-  await addDoc(collection(db,"contacts"), d);
-  clearForm();
-  setStatus("SAVED");
-  await load();
-});
+$("btnSave").onclick=async()=>{
+ const d={
+  carrier:$("carrier").value,
+  location:$("location").value,
+  pic:$("pic").value,
+  email:$("email").value,
+  contact:$("contact").value,
+  remarks:$("remarks").value
+ };
+ if(!d.carrier||!d.location){setStatus("REQUIRED");return;}
+ await addDoc(collection(db,"contacts"),d);
+ setStatus("SAVED");
+ load();
+};
 
 /* UPDATE */
-$("btnUpdate").addEventListener("click", async ()=>{
-  if(!state.editId){
-    setStatus("SELECT RECORD FIRST");
-    return;
-  }
-
-  const d = getForm();
-  if(!validate(d)) return;
-
-  await updateDoc(doc(db,"contacts", state.editId), d);
-  clearForm();
-  setStatus("UPDATED");
-  await load();
-});
+$("btnUpdate").onclick=async()=>{
+ if(!state.editId){setStatus("SELECT RECORD");return;}
+ const d={
+  carrier:$("carrier").value,
+  location:$("location").value,
+  pic:$("pic").value,
+  email:$("email").value,
+  contact:$("contact").value,
+  remarks:$("remarks").value
+ };
+ await updateDoc(doc(db,"contacts",state.editId),d);
+ setStatus("UPDATED");
+ load();
+};
 
 /* CLEAR */
-$("btnClear").addEventListener("click", ()=>{
-  clearForm();
-  setStatus("CLEARED");
-});
+$("btnClear").onclick=()=>location.reload();
 
-/* SEARCH */
-$("searchAll").addEventListener("input", (e)=>{
-  const v = e.target.value.toLowerCase();
-  state.view = state.data.filter(r =>
-    Object.values(r).join(" ").toLowerCase().includes(v)
-  );
-  render();
-});
+/* EXCEL */
+$("btnUploadExcel").onclick=()=>{
+ const f=$("excelUpload").files[0];
+ if(!f){setStatus("SELECT FILE");return;}
+ const r=new FileReader();
+ r.onload=async e=>{
+  const wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"});
+  const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+  for(const row of rows){
+   await addDoc(collection(db,"contacts"),{
+    carrier:(row.CARRIER||"").toUpperCase(),
+    location:(row.LOCATION||"").toUpperCase(),
+    pic:(row.PIC||"").toUpperCase(),
+    email:(row.EMAIL||"").toUpperCase(),
+    contact:(row.CONTACT||""),
+    remarks:(row.REMARKS||"").toUpperCase()
+   });
+  }
+  setStatus("UPLOADED");
+  load();
+ };
+ r.readAsArrayBuffer(f);
+};
 
-/* INIT */
 load();
 
 </script>
