@@ -11,66 +11,83 @@
 <style>
 :root{
   --bg1:#e7ebf0; --bg2:#f6f8fb;
-  --glass: rgba(255,255,255,0.55);
+  --glass: rgba(255,255,255,0.6);
   --border: rgba(0,0,0,0.08);
 }
+
 *{box-sizing:border-box}
 
 body{
   margin:0;
-  font-family: Calibri, Arial;
-  font-size:10pt;
+  font-family: Calibri, Arial, sans-serif;
+  font-size:12pt; /* 🔥 CALIBRI 12 */
   background: linear-gradient(135deg,var(--bg1),var(--bg2));
 }
 
-.container{padding:8px;width:100%}
+.container{
+  padding:8px;
+  width:100%;
+}
 
 .glass{
   background: var(--glass);
-  backdrop-filter: blur(10px);
   border:1px solid var(--border);
-  border-radius:10px;
+  border-radius:8px;
   padding:8px;
   margin-bottom:8px;
 }
 
-.row{display:flex;flex-wrap:wrap;gap:5px}
-
-/* INPUT */
-input{
-  height:26px;
-  padding:3px 5px;
-  border:1px solid #cfd6e0;
-  border-radius:5px;
-  flex:1;
-  text-transform: uppercase;
-  font-size:10px;
+.row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
 }
 
-/* BUTTON */
+input{
+  height:28px;
+  padding:4px 6px;
+  border:1px solid #cfd6e0;
+  border-radius:6px;
+  flex:1;
+  text-transform: uppercase;
+  font-size:12pt;
+}
+
 button{
-  height:26px;
-  padding:0 8px;
+  height:30px;
+  padding:0 10px;
   border:none;
-  border-radius:5px;
+  border-radius:6px;
   background:#4b5563;
   color:#fff;
   cursor:pointer;
-  font-size:10px;
+  font-size:12pt;
 }
 button.primary{background:#2563eb}
 button.secondary{background:#9ca3af;color:#111}
 
-/* TABLE COMPACT */
-.table-wrap{overflow:auto;max-height:72vh}
+.status{
+  margin-left:10px;
+  font-weight:600;
+}
 
-table{width:100%;border-collapse:collapse;font-size:9px}
+.table-wrap{
+  overflow:auto;
+  max-height:75vh;
+}
 
-th,td{
+/* 🔥 COMPACT TABLE */
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:12pt;
+}
+
+th, td{
   border:1px solid #d7dee8;
-  padding:2px 5px;
-  white-space:nowrap;
+  padding:2px 5px;  /* compact */
   line-height:1.2;
+  white-space:nowrap;
 }
 
 th{
@@ -79,28 +96,26 @@ th{
   background:#e9edf5;
 }
 
-tr{height:22px}
+tr{height:24px}
 
-.filters input{
-  width:100%;
-  height:20px;
-  font-size:9px;
-}
-
-.actions{text-align:center;width:110px}
-
+/* ICONS SMALL */
 .icon-btn{
   border:none;
   background:none;
   cursor:pointer;
-  margin:0 1px;
-  font-size:12px;
+  margin:0 2px;
+  font-size:13px;
 }
 .icon-copy{color:#3742fa}
 .icon-wa{color:#25D366}
 .icon-edit{color:#111}
 .icon-del{color:#dc2626}
 .icon-dl{color:#0ea5e9}
+
+.filters input{
+  font-size:10pt;
+  height:22px;
+}
 
 /* MOBILE */
 @media(max-width:768px){
@@ -111,6 +126,7 @@ tr{height:22px}
 </head>
 
 <body>
+
 <div class="container">
 
 <!-- FORM -->
@@ -129,12 +145,12 @@ tr{height:22px}
 <button id="btnExportAll">EXPORT VCF</button>
 </div>
 
-<div class="row" style="margin-top:5px;">
+<div class="row" style="margin-top:6px;">
 <input type="file" id="excelUpload">
 <button id="btnUploadExcel">UPLOAD EXCEL</button>
 </div>
 
-<span id="status"></span>
+<span id="status" class="status"></span>
 </div>
 
 <!-- SEARCH -->
@@ -149,12 +165,12 @@ tr{height:22px}
 <table>
 <thead>
 <tr>
-<th data-key="carrier">CARRIER</th>
-<th data-key="location">LOCATION</th>
-<th data-key="pic">PIC</th>
-<th data-key="email">EMAIL</th>
-<th data-key="contact">CONTACT</th>
-<th data-key="remarks">REMARKS</th>
+<th>CARRIER</th>
+<th>LOCATION</th>
+<th>PIC</th>
+<th>EMAIL</th>
+<th>CONTACT</th>
+<th>REMARKS</th>
 <th>ACTION</th>
 </tr>
 
@@ -168,7 +184,6 @@ tr{height:22px}
 <th></th>
 </tr>
 </thead>
-
 <tbody id="tbody"></tbody>
 </table>
 </div>
@@ -180,21 +195,21 @@ tr{height:22px}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-const firebaseConfig={
- apiKey:"AIzaSy...",
- authDomain:"c-rm-85c7c.firebaseapp.com",
- projectId:"c-rm-85c7c"
+const firebaseConfig = {
+  apiKey:"AIzaSy...",
+  authDomain:"c-rm-85c7c.firebaseapp.com",
+  projectId:"c-rm-85c7c"
 };
 
-const app=initializeApp(firebaseConfig);
-const db=getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 const state={data:[],view:[],editId:null};
 const $=id=>document.getElementById(id);
 
 /* CAPS */
 document.querySelectorAll("input").forEach(i=>{
- i.addEventListener("input",()=>i.value=i.value.toUpperCase());
+  i.addEventListener("input",()=>i.value=i.value.toUpperCase());
 });
 
 function setStatus(m){
@@ -231,7 +246,7 @@ function render(){
 
 <td>${r.remarks||""}</td>
 
-<td class="actions">
+<td>
 <button class="icon-btn icon-edit" data-edit="${r.id}"><i class="bi bi-pencil"></i></button>
 <button class="icon-btn icon-del" data-del="${r.id}"><i class="bi bi-trash"></i></button>
 <button class="icon-btn icon-dl" data-vcf="${r.id}"><i class="bi bi-download"></i></button>
@@ -241,7 +256,7 @@ function render(){
  $("tbody").innerHTML=html;
 }
 
-/* EVENTS */
+/* ACTION EVENTS */
 document.body.addEventListener("click",async e=>{
  const t=e.target.closest("button");
  if(!t) return;
@@ -253,37 +268,27 @@ document.body.addEventListener("click",async e=>{
 
  if(t.dataset.wa){
   const n=t.dataset.wa.replace(/\D/g,'');
-  if(n) window.open(`https://wa.me/${n}`,"_blank");
+  window.open(`https://wa.me/${n}`,"_blank");
  }
 
  if(t.dataset.edit){
   const r=state.data.find(x=>x.id===t.dataset.edit);
-  if(!r) return;
-  $("carrier").value=r.carrier||"";
-  $("location").value=r.location||"";
-  $("pic").value=r.pic||"";
-  $("email").value=r.email||"";
-  $("contact").value=r.contact||"";
-  $("remarks").value=r.remarks||"";
+  Object.keys(r).forEach(k=>$(k)&&($(k).value=r[k]||""));
   state.editId=r.id;
-  setStatus("EDITING");
  }
 
  if(t.dataset.del){
   await deleteDoc(doc(db,"contacts",t.dataset.del));
-  setStatus("DELETED");
   load();
  }
 
  if(t.dataset.vcf){
   const r=state.data.find(x=>x.id===t.dataset.vcf);
-  if(!r) return;
   const v=`BEGIN:VCARD
-VERSION:3.0
-FN:${r.pic||""}
-ORG:${r.carrier||""}
-TEL:${r.contact||""}
-EMAIL:${r.email||""}
+FN:${r.pic}
+ORG:${r.carrier}
+TEL:${r.contact}
+EMAIL:${r.email}
 END:VCARD`;
   const a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob([v]));
@@ -304,7 +309,6 @@ $("btnSave").onclick=async()=>{
  };
  if(!d.carrier||!d.location){setStatus("REQUIRED");return;}
  await addDoc(collection(db,"contacts"),d);
- setStatus("SAVED");
  load();
 };
 
@@ -320,7 +324,6 @@ $("btnUpdate").onclick=async()=>{
   remarks:$("remarks").value
  };
  await updateDoc(doc(db,"contacts",state.editId),d);
- setStatus("UPDATED");
  load();
 };
 
@@ -330,9 +333,7 @@ $("btnClear").onclick=()=>location.reload();
 /* SEARCH */
 $("searchAll").addEventListener("input",e=>{
  const v=e.target.value.toLowerCase();
- state.view=state.data.filter(r=>
-  Object.values(r).join(" ").toLowerCase().includes(v)
- );
+ state.view=state.data.filter(r=>Object.values(r).join(" ").toLowerCase().includes(v));
  render();
 });
 
@@ -340,14 +341,9 @@ $("searchAll").addEventListener("input",e=>{
 document.querySelectorAll(".filters input").forEach(inp=>{
  inp.addEventListener("input",()=>{
   const f={};
-  document.querySelectorAll(".filters input").forEach(i=>{
-    f[i.dataset.col]=i.value.toLowerCase();
-  });
-
+  document.querySelectorAll(".filters input").forEach(i=>f[i.dataset.col]=i.value.toLowerCase());
   state.view=state.data.filter(r=>{
-    return Object.keys(f).every(k=>{
-      return !f[k]||(r[k]||"").toLowerCase().includes(f[k]);
-    });
+   return Object.keys(f).every(k=>!f[k]||(r[k]||"").toLowerCase().includes(f[k]));
   });
   render();
  });
